@@ -1,0 +1,9 @@
+.DS_Store
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Per-project session logs written by the hooks themselves.
+.product-traceability/
