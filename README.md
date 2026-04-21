@@ -106,6 +106,52 @@ Removes the skill, hooks, and settings entries. Project trace files are
 
 ---
 
+## Where the data lives
+
+Everything is **per-project, in the project's own repo**. The skill does not
+maintain a central database — each project owns its own traceability.
+
+For every project you open in Claude Code, these files are created and kept
+in sync in the project root:
+
+| Path | Purpose | Committed by default? |
+|------|---------|------------------------|
+| `requirements.md` | Living PRD | ✅ yes — commit it |
+| `change.log` | Dated change history | ✅ yes — commit it |
+| `decisions.md` | Decision records with rationale | ✅ yes — commit it |
+| `traceability-matrix.md` | Requirement ↔ artifact map | ✅ yes — commit it |
+| `.product-traceability/sessions/YYYY-MM-DD.md` | Raw prompt log per session | ✅ yes — commit it |
+
+The four top-level files are the curated, human-readable audit trail — you
+almost certainly want them in the repo.
+
+The `.product-traceability/` directory is the **raw session log**: it
+captures the original user prompts verbatim (timestamped, with session IDs)
+so that future agents can reconstruct exactly what was asked. It is also
+committed by default, so your git history contains a complete record of
+every AI-assisted interaction.
+
+### Turning off the raw session log
+
+If you prefer not to commit raw prompts (e.g. they may contain sensitive
+project context, credentials typed in by mistake, or you just find them
+noisy), add this single line to the project's `.gitignore`:
+
+```gitignore
+.product-traceability/
+```
+
+The hook will keep writing session logs locally (so the files exist for
+your own reference), but git will stop tracking them. The four top-level
+trace files (`requirements.md`, `change.log`, `decisions.md`,
+`traceability-matrix.md`) are unaffected — they stay in the repo.
+
+To stop writing session logs entirely, simply delete the
+`.product-traceability/` directory and add it to `.gitignore`; the next
+`UserPromptSubmit` hook will recreate it, but it will be ignored by git.
+
+---
+
 ## What each file looks like
 
 ### `requirements.md` — living PRD
