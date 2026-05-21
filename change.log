@@ -1,0 +1,18 @@
+# Changelog
+
+All notable changes to this project are recorded here.
+Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+Newest entries appear at the top.
+
+## [Unreleased]
+
+### Added
+- README: "Measured impact" section summarizing per-session token savings,
+  exploration-step reduction, and trace-doc reference rate, sourced from
+  the traceability-autopilot impact report. Includes a "% lift" column,
+  spells "percent points" in full, and notes that a controlled A/B across
+  a wider variety of codebases is needed for causal claims.
+
+### Updated
+
+### Removed

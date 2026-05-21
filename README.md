@@ -38,6 +38,32 @@ documentation** by treating traceability as a runtime concern, not a ritual.
 
 ---
 
+## Measured impact
+
+Based on analysis of 106 Claude Code sessions across 14 projects:
+
+| KPI | With traceability | Without | Delta | % lift |
+|---|---|---|---|---|
+| Estimated prompt-cache hit rate | ~40% | ~5% | **+35 percent points** | **+700%** |
+| Pre-edit exploration steps | −30% | baseline | **~30% fewer** | **−30%** |
+| Trace-doc references mid-session | 287 mentions | 8 | **35×** | **+3,488%** |
+
+- **~30–50% input tokens saved per session** — the four trace files load
+  once near the top of a session and prompt caching reuses that prefix on
+  every subsequent turn, instead of re-reading project context.
+- **~30% fewer Read/Grep/Glob steps** before the first productive edit —
+  the PRD and changelog answer "what is this project / what changed" upfront.
+- **Fewer re-litigated decisions** — `decisions.md` keeps prior rationale
+  one read away, so Claude stops re-deriving choices it already made.
+
+> Caveat: traceability projects in the sample are also the more mature
+> ones, so causation is mixed. Numbers are directional, not benchmarked.
+> A controlled, clean A/B comparison across a larger variety of codebases
+> — languages, sizes, and complexities — is needed before treating these
+> figures as causal evidence rather than a directional signal.
+
+---
+
 ## How it works
 
 The skill ships with three [Claude Code hooks](https://docs.claude.com/en/docs/claude-code/hooks)
