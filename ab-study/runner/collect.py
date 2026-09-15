@@ -18,7 +18,7 @@ results folder. Every number is measured from run artifacts:
 
 Only complete runs (10 batches) named <app>-rep-<arm>-<k> are counted.
 """
-import argparse, csv, json, statistics as st, sys
+import argparse, csv, json, math, statistics as st, sys
 from pathlib import Path
 
 STUDY = Path(__file__).resolve().parent.parent
@@ -77,7 +77,7 @@ def measure(root, app, arm, run):
         round_trips=trips, tool_calls=sum(cats.values()),
         output_tokens=usage('output_tokens'), cache_write_tokens=usage('cache_creation_input_tokens'),
         api_min=round(api_ms / 60000, 2), session_min=round(dur_ms / 60000, 2),
-        wall_min=round(sum(m.get('elapsed_s') or 0 for m in man) / 60, 2),
+        wall_min=round(math.fsum(m.get('elapsed_s') or 0 for m in man) / 60, 2),
         record_touches=len(hits) if arm != 'control' else '',
         lines=sum(len(f.read_text().splitlines()) for f in app_files) if app_files else '',
     )

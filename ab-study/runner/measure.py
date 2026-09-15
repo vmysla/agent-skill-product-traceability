@@ -13,7 +13,7 @@
 `root` is a data folder holding runs/ and arms/: the study folder for your own runs, or
 results/2026-09-replication for the published ones.
 """
-import json, re, shlex
+import json, math, re, shlex
 from pathlib import Path
 
 # Native memory topic files are read on demand by design (the control arm did it too), so
@@ -87,7 +87,8 @@ def scan(arm_dir: Path, run_dir: Path):
 def run_totals(root: Path, run: str, arm: str):
     run_dir = root / 'runs' / run / arm
     man = json.loads((run_dir / 'manifest.json').read_text())
-    main_cost = sum(r['cost_usd'] or 0 for r in man)
+    # math.fsum: exact on every Python version (the built-in sum of floats changed in 3.12)
+    main_cost = math.fsum(r['cost_usd'] or 0 for r in man)
     turns = sum(r['num_turns'] or 0 for r in man)
     final = f"{man[-1].get('passed')}/{man[-1].get('total')}"
     # regressions: a criterion that passed then failed later without being superseded
