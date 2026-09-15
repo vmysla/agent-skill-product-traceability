@@ -1,0 +1,120 @@
+{
+ "ts": "2026-09-13T04:14:21Z",
+ "source_map": [
+  {
+   "file": "index.html",
+   "lines": 659,
+   "functions": [
+    "isType@L156",
+    "randomType@L158",
+    "cleanQueue@L170",
+    "fillPreview@L175",
+    "makeMatrix@L179",
+    "pieceCells@L183",
+    "fits@L193",
+    "spawn@L207",
+    "clearLines@L235",
+    "lockPiece@L251",
+    "hold@L264",
+    "tryMove@L274",
+    "isResting@L289",
+    "restartLockDelay@L294",
+    "gravityStep@L303",
+    "shift@L316",
+    "softDrop@L325",
+    "rotate@L337",
+    "ghostCells@L357",
+    "togglePause@L367",
+    "input@L381",
+    "gravityInterval@L407",
+    "stopTimer@L411",
+    "startTimer@L416",
+    "restartTimerIfNeeded@L429",
+    "emptyRow@L435",
+    "newGame@L442",
+    "paintCell@L493",
+    "fillMini@L501",
+    "renderPreview@L516",
+    "render@L528"
+   ],
+   "testids": [
+    "board",
+    "game-over",
+    "paused-indicator",
+    "score",
+    "level",
+    "lines",
+    "next-piece",
+    "hold-piece",
+    "pause-btn",
+    "restart-btn"
+   ]
+  }
+ ],
+ "requirements": [
+  {
+   "id": "REQ-001",
+   "status": "done",
+   "title": "Build a Tetris game as a single static HTML file"
+  },
+  {
+   "id": "REQ-002",
+   "status": "done",
+   "title": "Rotation and piece locking rules"
+  },
+  {
+   "id": "REQ-003",
+   "status": "done",
+   "title": "Add line clears and scoring"
+  },
+  {
+   "id": "REQ-004",
+   "status": "done",
+   "title": "Next-piece preview and game-over state"
+  },
+  {
+   "id": "REQ-005",
+   "status": "done",
+   "title": "Soft drop breathing room on resting piece"
+  },
+  {
+   "id": "REQ-006",
+   "status": "done",
+   "title": "Show only next piece in preview"
+  },
+  {
+   "id": "REQ-007",
+   "status": "done",
+   "title": "Levels and hold"
+  },
+  {
+   "id": "REQ-008",
+   "status": "open",
+   "title": "Bug report from a player:"
+  },
+  {
+   "id": "REQ-009",
+   "status": "done",
+   "title": "Ghost piece and pause feature"
+  },
+  {
+   "id": "REQ-010",
+   "status": "done",
+   "title": "Final pass: keyboard controls and restart button"
+  }
+ ],
+ "unverified": [
+  "REQ-001",
+  "REQ-002",
+  "REQ-003",
+  "REQ-004",
+  "REQ-005",
+  "REQ-006",
+  "REQ-007",
+  "REQ-009",
+  "REQ-010"
+ ],
+ "unsatisfied": [
+  "REQ-008"
+ ]
+}

@@ -1,0 +1,13 @@
+# Change log
+_Regenerated from the journal by product-record hooks. Newest first._
+
+2026-09-13T05:26:57Z  c4da85c3  REQ-010  | I added keyboard entry and the scientific panel. A headless Chrome run of 33 scenarios found nothing broken from earlier steps, so no fixes were needed. The one... | 1 file changed, 85 insertions(+), 4 deletions(-) [index.html]
+2026-09-13T05:24:26Z  a179bcf7  REQ-009  | I added MC, MR and M+ (M+ is two keys wide) plus the M indicator. Memory stores exact values and is rounded only when shown, so `2 ÷ 3 =` M+, then AC, MR `× 3 =... | 1 file changed, 46 insertions(+), 1 deletion(-) [index.html]
+2026-09-13T05:23:11Z  8d4fef63  REQ-008  | I couldn't reproduce this, so I haven't changed any code. I ran both calculations in headless Chrome against the current `index.html`: - **0.1 + 0.2 =**: the di... | no diff
+2026-09-13T05:21:52Z  f224adfd  REQ-007  | I added the tape to `index.html`: rows appear above the display, newest first, with a Clear button that leaves the display alone. I checked it with jsdom in a s... | 1 file changed, 103 insertions(+), 4 deletions(-) [index.html]
+2026-09-13T05:19:36Z  3c227028  REQ-006  | I removed the `%` key and the code behind it, and made AC two keys wide so the row stays full. `±` works the same as before. I have not opened it in a browser. ... | 1 file changed, 4 insertions(+), 11 deletions(-) [index.html]
+2026-09-13T05:18:46Z  d1e810ae  REQ-005  | I added `(` and `)` keys to `index.html`. I tested it with a quick script in Node, not in a browser. Results: - `2 + ( 3 × 4 ) =` → `14` - `( 2 + 3 ) × 4 =` → `... | 1 file changed, 38 insertions(+), 1 deletion(-) [index.html]
+2026-09-13T05:17:32Z  b9932ee3  REQ-004  | I added the `±` and `%` keys to `index.html`. I haven't opened it in a browser, so `5 ±` → `-5` → `5` and `50 %` → `0.5` are still untested. To fit the keys, th... | 1 file changed, 42 insertions(+), 10 deletions(-) [index.html]
+2026-09-13T05:15:36Z  68152374  REQ-003  | Both changes are in `index.html`. I tested the number formatting on its own in Node and it gave the right output for your examples. I haven't clicked through th... | 1 file changed, 32 insertions(+), 5 deletions(-) [index.html]
+2026-09-13T05:14:15Z  06aad1a5  REQ-002  | I didn't have to change any logic: the calculator already chains operations, strictly left to right. I only added a `// [REQ-002]` comment in `inputOperator` th... | 1 file changed, 2 insertions(+) [index.html]
+2026-09-13T05:13:30Z  14a1fbbd  REQ-001  | I built the calculator in `index.html`. It's one file with inline CSS and JS, so it works when opened straight from disk. I haven't run it in a browser; I only ... | no diff [index.html (new)]

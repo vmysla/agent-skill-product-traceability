@@ -1,0 +1,111 @@
+{
+ "ts": "2026-09-13T20:06:04Z",
+ "source_map": [
+  {
+   "file": "index.html",
+   "lines": 320,
+   "functions": [
+    "loadTodos@L75",
+    "saveTodos@L85",
+    "makeId@L92",
+    "normalizeDue@L98",
+    "localToday@L103",
+    "isOverdue@L111",
+    "normalizePriority@L116",
+    "addTodo@L121",
+    "deleteTodo@L130",
+    "toggleTodo@L137",
+    "markAllComplete@L146",
+    "clearCompleted@L153",
+    "byPriority@L160",
+    "matchesSearch@L171",
+    "editTodo@L176",
+    "visibleTodos@L187",
+    "setFilter@L197",
+    "render@L203",
+    "startEdit@L254",
+    "finish@L262",
+    "isTypingTarget@L293"
+   ],
+   "testids": [
+    "todo-input",
+    "todo-due",
+    "todo-priority",
+    "todo-add",
+    "search-input",
+    "filter-all",
+    "filter-active",
+    "filter-completed",
+    "todo-list",
+    "bulk-mark-all",
+    "bulk-clear-completed"
+   ]
+  }
+ ],
+ "requirements": [
+  {
+   "id": "REQ-001",
+   "status": "done",
+   "title": "Build a todo list app as single HTML file"
+  },
+  {
+   "id": "REQ-002",
+   "status": "done",
+   "title": "Add completion and filtering"
+  },
+  {
+   "id": "REQ-003",
+   "status": "done",
+   "title": "Add due dates to todos"
+  },
+  {
+   "id": "REQ-004",
+   "status": "done",
+   "title": "Add priorities to todos"
+  },
+  {
+   "id": "REQ-005",
+   "status": "done",
+   "title": "Sort todos by priority highest first"
+  },
+  {
+   "id": "REQ-006",
+   "status": "done",
+   "title": "Remove priority colour-coding"
+  },
+  {
+   "id": "REQ-007",
+   "status": "done",
+   "title": "Inline editing and search for todos"
+  },
+  {
+   "id": "REQ-008",
+   "status": "open",
+   "title": "Bug report from a user in California (UTC-8):"
+  },
+  {
+   "id": "REQ-009",
+   "status": "done",
+   "title": "Add bulk actions"
+  },
+  {
+   "id": "REQ-010",
+   "status": "done",
+   "title": "Final pass: keyboard shortcuts and verification"
+  }
+ ],
+ "unverified": [
+  "REQ-001",
+  "REQ-002",
+  "REQ-003",
+  "REQ-004",
+  "REQ-005",
+  "REQ-006",
+  "REQ-007",
+  "REQ-009",
+  "REQ-010"
+ ],
+ "unsatisfied": [
+  "REQ-008"
+ ]
+}

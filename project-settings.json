@@ -1,0 +1,25 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {"hooks": [{"type": "command", "command": "PR_BIN_DIR={BIN_DIR} {HOOKS_DIR}/pr-start.sh", "timeout": 5}]}
+    ],
+    "UserPromptSubmit": [
+      {"hooks": [{"type": "command", "command": "PR_BIN_DIR={BIN_DIR} {HOOKS_DIR}/pr-prompt.sh", "timeout": 5}]}
+    ],
+    "PostToolUse": [
+      {"matcher": "Edit|Write", "hooks": [
+        {"type": "command", "command": "PR_BIN_DIR={BIN_DIR} {HOOKS_DIR}/pr-trace.sh", "async": true, "timeout": 10},
+        {"type": "command", "command": "PR_BIN_DIR={BIN_DIR} {HOOKS_DIR}/pr-check.sh", "async": true, "timeout": 120}
+      ]},
+      {"matcher": "Bash", "hooks": [
+        {"type": "command", "command": "PR_BIN_DIR={BIN_DIR} {HOOKS_DIR}/pr-trace-bash.sh", "async": true, "timeout": 15}
+      ]}
+    ],
+    "Stop": [
+      {"hooks": [{"type": "command", "command": "PR_BIN_DIR={BIN_DIR} {HOOKS_DIR}/pr-stop.sh", "timeout": 240}]}
+    ],
+    "SessionEnd": [
+      {"hooks": [{"type": "command", "command": "PR_BIN_DIR={BIN_DIR} {HOOKS_DIR}/pr-flush.sh", "timeout": 20}]}
+    ]
+  }
+}

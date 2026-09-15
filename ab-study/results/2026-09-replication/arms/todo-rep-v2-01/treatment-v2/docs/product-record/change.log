@@ -1,0 +1,13 @@
+# Change log
+_Regenerated from the journal by product-record hooks. Newest first._
+
+2026-09-13T21:01:46Z  5fd12e0a  REQ-010  | I added one new shortcut: `/` now jumps to the search box, unless you're already typing in a field. The other two already worked: Enter in the todo box adds the... | 1 file changed, 24 insertions(+), 6 deletions(-) [index.html]
+2026-09-13T21:00:30Z  b1937948  REQ-009  | I added two buttons under the filters: `bulk-mark-all` marks every todo complete, and `bulk-clear-completed` deletes all completed todos. I haven't run the page... | 1 file changed, 24 insertions(+) [index.html]
+2026-09-13T20:59:51Z  1f40c198  REQ-008  | I couldn't reproduce this, so I made no change. - **What I tested:** I ran the overdue check with the clock set to California time. A task due 2026-09-13 is not... | no diff
+2026-09-13T20:58:54Z  d0b8efd2  REQ-007  | I added both: double-click a todo's text to edit it in place (`todo-edit-input`), and a `search-input` box that combines with the filter. The script's syntax ch... | 1 file changed, 80 insertions(+), 5 deletions(-) [index.html]
+2026-09-13T20:57:23Z  c760e855  REQ-006  | I removed the coloured priority stripe (DEC-008 no longer applies), so red now only marks overdue todos. Each todo now shows its priority as plain grey text ("H... | 1 file changed, 8 insertions(+), 5 deletions(-) [index.html]
+2026-09-13T20:56:37Z  dfc32e98  REQ-005  | Todos now sort by priority: high, then med, then low. Todos with the same priority keep the order they were added. Completed todos still sit below active ones (... | 1 file changed, 11 insertions(+), 4 deletions(-) [index.html]
+2026-09-13T20:55:59Z  e87e37a6  REQ-004  | I added priorities: a `todo-priority` select (Low/Med/High, Med by default and reset to Med after each add), `data-priority` on every `todo-item`, and a coloure... | 1 file changed, 22 insertions(+), 4 deletions(-) [index.html]
+2026-09-13T20:55:11Z  9c741d27  REQ-003  | I added due dates. The date picker (`todo-due`) sits in the add form, and rows with a due date show `Due YYYY-MM-DD` (`todo-due-date`); I haven't run the app to... | 1 file changed, 54 insertions(+), 3 deletions(-) [index.html]
+2026-09-13T20:54:11Z  ba487735  REQ-002  | I added the `todo-toggle` checkbox, the `data-completed` attribute on each item, and the three filter buttons. "All" is the default, and the filter resets to Al... | 1 file changed, 59 insertions(+), 2 deletions(-) [index.html]
+2026-09-13T20:53:16Z  c78f1947  REQ-001  | I built `index.html` as one file with inline CSS and JS and a form whose Add button adds todos. Pressing Enter adds too. Todos are saved under `localStorage` ke... | no diff [index.html (new)]

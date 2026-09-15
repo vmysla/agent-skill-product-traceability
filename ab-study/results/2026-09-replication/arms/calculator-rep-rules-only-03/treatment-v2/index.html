@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculator</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center;
+    background: #eef0f3; font-family: system-ui, -apple-system, sans-serif;
+  }
+  .calc {
+    width: min(320px, 92vw); padding: 16px; border-radius: 16px;
+    background: #1f2329; box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  }
+  .display {
+    height: 72px; margin-bottom: 12px; padding: 0 12px; border-radius: 10px;
+    background: #2c323a; color: #fff; font-size: 2.2rem;
+    display: flex; align-items: center; justify-content: flex-end;
+    overflow: hidden; white-space: nowrap;
+  }
+  .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  button {
+    height: 60px; border: 0; border-radius: 10px; font-size: 1.3rem;
+    background: #3a414b; color: #fff; cursor: pointer;
+  }
+  button:active { filter: brightness(1.2); }
+  .op { background: #f59e0b; }
+  .clear { background: #6b7280; }
+  .equals { background: #10b981; }
+  .wide { grid-column: span 2; }
+  .mem-row { height: 18px; margin-bottom: 4px; padding: 0 12px; font-size: .8rem; color: #6b7280; text-align: right; }
+  .mem-indicator[data-active="false"] { visibility: hidden; }
+  .mem { background: #2c323a; font-size: 1.05rem; }
+  .sci { background: #2c323a; font-size: 1.05rem; }
+  .sci[aria-pressed="true"] { background: #4b5563; }
+  .sci-keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 8px; }
+  .sci-keys[hidden] { display: none; }
+  .tape { margin-top: 12px; padding: 8px 12px; border-radius: 10px; background: #2c323a; color: #fff; }
+  .tape-head { display: flex; align-items: center; justify-content: space-between; color: #9ca3af; font-size: .85rem; }
+  .tape-clear { height: auto; padding: 4px 10px; font-size: .85rem; background: #3a414b; }
+  .tape-list { max-height: 180px; overflow-y: auto; }
+  .tape-row { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-top: 1px solid #3a414b; }
+  .tape-row:first-child { border-top: 0; }
+  .tape-expr { color: #9ca3af; overflow-wrap: anywhere; }
+  .tape-result { white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="calc">
+  <div class="mem-row"><span class="mem-indicator" data-testid="mem-indicator" data-active="false">M</span></div>
+  <div class="display" data-testid="calc-display" data-value="0" data-error="false">0</div>
+  <div class="sci-keys" data-testid="sci-panel" hidden>
+    <button class="op" data-testid="key-sqrt" data-action="sqrt">√x</button>
+    <button class="op" data-testid="key-square" data-action="square">x²</button>
+    <button class="op" data-testid="key-recip" data-action="recip">1/x</button>
+  </div>
+  <div class="keys">
+    <button class="mem" data-testid="key-mc" data-action="mc">MC</button>
+    <button class="mem" data-testid="key-mr" data-action="mr">MR</button>
+    <button class="mem" data-testid="key-mplus" data-action="mplus">M+</button>
+    <button class="sci" data-testid="key-sci" data-action="sci" aria-pressed="false">SCI</button>
+    <button class="clear wide" data-testid="key-lparen" data-action="lparen">(</button>
+    <button class="clear wide" data-testid="key-rparen" data-action="rparen">)</button>
+    <button class="clear wide" data-testid="key-clear" data-action="clear">AC</button>
+    <button class="clear" data-testid="key-sign" data-action="sign">±</button>
+    <button class="op" data-testid="key-div" data-op="/">÷</button>
+    <button data-testid="key-7" data-digit="7">7</button>
+    <button data-testid="key-8" data-digit="8">8</button>
+    <button data-testid="key-9" data-digit="9">9</button>
+    <button class="op" data-testid="key-mul" data-op="*">×</button>
+    <button data-testid="key-4" data-digit="4">4</button>
+    <button data-testid="key-5" data-digit="5">5</button>
+    <button data-testid="key-6" data-digit="6">6</button>
+    <button class="op" data-testid="key-sub" data-op="-">−</button>
+    <button data-testid="key-1" data-digit="1">1</button>
+    <button data-testid="key-2" data-digit="2">2</button>
+    <button data-testid="key-3" data-digit="3">3</button>
+    <button class="op" data-testid="key-add" data-op="+">+</button>
+    <button class="wide" data-testid="key-0" data-digit="0">0</button>
+    <button data-testid="key-dot" data-action="dot">.</button>
+    <button class="equals" data-testid="key-equals" data-action="equals">=</button>
+  </div>
+  <div class="tape">
+    <div class="tape-head">
+      <span>Tape</span>
+      <button class="tape-clear" data-testid="tape-clear">Clear</button>
+    </div>
+    <div class="tape-list" data-testid="calc-tape"></div>
+  </div>
+</div>
+<script>
+  // State: acc = stored left operand, op = pending operator,
+  // entry = digits being typed (string) or null, value = number shown,
+  // ready = value is a finished right operand made by ± or ), not typed,
+  // groups = saved { acc, op } of each open parenthesis, innermost last.
+  // For the tape: expr = committed expression text per group level, innermost
+  // last; operand = text of the current operand at that level, or null.
+  var state = { acc: null, op: null, entry: null, value: 0, error: false, ready: false, groups: [], expr: [''], operand: null };
+  var tape = [];
+  // Memory survives AC. Like every stored value it is never rounded.
+  var memory = 0;
+  var SYMBOLS = { '+': '+', '-': '\u2212', '*': '\u00d7', '/': '\u00f7' };
+
+  // Expression text of one level plus its operand, without a trailing operator.
+  function levelText(text, operand) {
+    if (operand !== null) text += operand.replace(/\.$/, '');
+    return text.replace(/ \S $/, '');
+  }
+
+  function compute(a, op, b) {
+    var r;
+    if (op === '+') r = a + b;
+    else if (op === '-') r = a - b;
+    else if (op === '*') r = a * b;
+    else r = a / b;
+    if (!isFinite(r)) return NaN;
+    return r;
+  }
+
+  // Presentation only: stored values are never rounded. At most 10 significant
+  // digits, no trailing zeros, exponential only for |n| >= 1e10 or < 1e-9.
+  function formatNumber(n) {
+    if (n === 0) return '0';
+    var r = Number(n.toPrecision(10));
+    var abs = Math.abs(r);
+    if (abs >= 1e10 || abs < 1e-9) {
+      return r.toExponential(9).replace(/\.?0+e/, 'e');
+    }
+    var exp = Number(r.toExponential(9).split('e')[1]);
+    var s = r.toFixed(Math.max(0, 9 - exp));
+    if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
+    return s;
+  }
+
+  function pressDigit(d) {
+    if (state.error) return;
+    state.ready = false;
+    if (state.entry === null || state.entry === '0') state.entry = d;
+    else if (state.entry === '-0') state.entry = '-' + d;
+    else state.entry += d;
+    state.value = Number(state.entry);
+    state.operand = state.entry;
+  }
+
+  function pressDot() {
+    if (state.error) return;
+    state.ready = false;
+    if (state.entry === null) state.entry = '0';
+    if (state.entry.indexOf('.') === -1) state.entry += '.';
+    state.value = Number(state.entry);
+    state.operand = state.entry;
+  }
+
+  // While typing, ± toggles the sign of the typed digits so typing can go on.
+  // Otherwise it flips the shown value; with an operator waiting, that value
+  // becomes the right operand (5 + ± = is 0).
+  function pressSign() {
+    if (state.error) return;
+    if (state.entry !== null) {
+      state.entry = state.entry.charAt(0) === '-' ? state.entry.slice(1) : '-' + state.entry;
+      state.value = Number(state.entry);
+      state.operand = state.entry;
+    } else {
+      state.value = -state.value;
+      state.ready = state.op !== null;
+      if (state.operand === null) state.operand = formatNumber(state.value);
+      else state.operand = state.operand.charAt(0) === '-' ? state.operand.slice(1) : '-' + state.operand;
+    }
+  }
+
+  function resolve() {
+    if (state.op !== null && (state.entry !== null || state.ready)) {
+      state.value = compute(state.acc, state.op, state.value);
+      if (isNaN(state.value)) state.error = true;
+    }
+  }
+
+  // Immediate execution, no precedence: each operator key first finishes the
+  // waiting operation, strictly left to right, so the display always shows a
+  // real running result. 2 + 3 × 4 = is 20, not 14.
+  function pressOp(op) {
+    if (state.error) return;
+    resolve();
+    if (state.error) return;
+    var top = state.expr.length - 1;
+    var sym = ' ' + SYMBOLS[op] + ' ';
+    if (state.operand !== null) state.expr[top] = levelText(state.expr[top], state.operand) + sym;
+    else if (state.expr[top] !== '') state.expr[top] = state.expr[top].slice(0, -3) + sym;
+    else state.expr[top] = formatNumber(state.value) + sym;
+    state.operand = null;
+    state.acc = state.value;
+    state.op = op;
+    state.entry = null;
+    state.ready = false;
+  }
+
+  // ( saves the waiting operation and starts a fresh one inside the group.
+  // Inside, the same left-to-right rule applies.
+  function pressLparen() {
+    if (state.error) return;
+    state.groups.push({ acc: state.acc, op: state.op });
+    state.expr.push('');
+    state.operand = null;
+    state.acc = null;
+    state.op = null;
+    state.entry = null;
+    state.value = 0;
+    state.ready = false;
+  }
+
+  // ) finishes the group; its result becomes the right operand of the saved
+  // operation (2 + ( 3 × 4 ) = is 14). Ignored with no open group.
+  function closeGroup() {
+    resolve();
+    if (state.error) return;
+    var g = state.groups.pop();
+    var inner = levelText(state.expr.pop(), state.operand);
+    state.operand = '(' + (inner === '' ? formatNumber(state.value) : inner) + ')';
+    state.acc = g.acc;
+    state.op = g.op;
+    state.entry = null;
+    state.ready = state.op !== null;
+  }
+
+  function pressRparen() {
+    if (state.error || state.groups.length === 0) return;
+    closeGroup();
+  }
+
+  // = closes any open groups first.
+  function pressEquals() {
+    if (state.error) return;
+    while (state.groups.length > 0 && !state.error) closeGroup();
+    if (state.error) return;
+    resolve();
+    var text = levelText(state.expr[0], state.operand);
+    // A calculation is complete when the expression holds at least one operator.
+    if (!state.error && / [+\u2212\u00d7\u00f7] /.test(text)) tape.unshift({ expr: text, value: state.value });
+    state.expr = [''];
+    state.operand = formatNumber(state.value);
+    state.acc = null;
+    state.op = null;
+    state.entry = null;
+    state.ready = false;
+  }
+
+  // M+ adds the shown value and ends typing; with an operator waiting, that
+  // value stays the right operand. A non-finite sum is an Error and memory
+  // keeps its old value.
+  function pressMplus() {
+    if (state.error) return;
+    var sum = compute(memory, '+', state.value);
+    if (isNaN(sum)) { state.error = true; return; }
+    memory = sum;
+    if (state.entry !== null) {
+      state.entry = null;
+      state.ready = state.op !== null;
+    }
+  }
+
+  // MR puts memory in the display as a finished operand, like ± or ).
+  function pressMr() {
+    if (state.error) return;
+    state.value = memory;
+    state.operand = formatNumber(memory);
+    state.entry = null;
+    state.ready = state.op !== null;
+  }
+
+  function pressMc() {
+    memory = 0;
+  }
+
+  // √x, x² and 1/x act on the shown value at once; the result is a finished
+  // operand, like ± or ). A non-finite or undefined result is an Error.
+  function pressSci(fn) {
+    if (state.error) return;
+    var x = state.value, r;
+    if (fn === 'sqrt') r = Math.sqrt(x);
+    else if (fn === 'square') r = x * x;
+    else r = 1 / x;
+    if (!isFinite(r)) { state.error = true; return; }
+    var text = state.operand !== null ? state.operand.replace(/\.$/, '') : formatNumber(x);
+    if (!/^[\d.]+(e[+-]\d+)?$|^\(.*\)$/.test(text)) text = '(' + text + ')';
+    if (fn === 'sqrt') state.operand = '√' + text;
+    else if (fn === 'square') state.operand = text + '²';
+    else state.operand = '1/' + text;
+    state.value = r;
+    state.entry = null;
+    state.ready = state.op !== null;
+  }
+
+  function clear() {
+    state = { acc: null, op: null, entry: null, value: 0, error: false, ready: false, groups: [], expr: [''], operand: null };
+  }
+
+  var display = document.querySelector('[data-testid="calc-display"]');
+  var tapeList = document.querySelector('[data-testid="calc-tape"]');
+  var memIndicator = document.querySelector('[data-testid="mem-indicator"]');
+
+  function renderTape() {
+    tapeList.textContent = '';
+    tape.forEach(function (item) {
+      var row = document.createElement('div');
+      row.className = 'tape-row';
+      row.setAttribute('data-testid', 'tape-row');
+      var expr = document.createElement('span');
+      expr.className = 'tape-expr';
+      expr.setAttribute('data-testid', 'tape-expr');
+      expr.textContent = item.expr;
+      var result = document.createElement('span');
+      result.className = 'tape-result';
+      result.setAttribute('data-testid', 'tape-result');
+      result.setAttribute('data-value', String(item.value));
+      result.textContent = formatNumber(item.value);
+      row.appendChild(expr);
+      row.appendChild(result);
+      tapeList.appendChild(row);
+    });
+  }
+
+  function render() {
+    display.setAttribute('data-value', String(state.value));
+    display.setAttribute('data-error', state.error ? 'true' : 'false');
+    memIndicator.setAttribute('data-active', memory !== 0 ? 'true' : 'false');
+    if (state.error) display.textContent = 'Error';
+    else display.textContent = state.entry !== null ? state.entry : formatNumber(state.value);
+  }
+
+  var sciKey = document.querySelector('[data-testid="key-sci"]');
+  var sciPanel = document.querySelector('[data-testid="sci-panel"]');
+
+  function toggleSci() {
+    sciPanel.hidden = !sciPanel.hidden;
+    sciKey.setAttribute('aria-pressed', sciPanel.hidden ? 'false' : 'true');
+  }
+
+  function press(b) {
+    if (b.dataset.digit !== undefined) pressDigit(b.dataset.digit);
+    else if (b.dataset.op) pressOp(b.dataset.op);
+    else if (b.dataset.action === 'dot') pressDot();
+    else if (b.dataset.action === 'sign') pressSign();
+    else if (b.dataset.action === 'lparen') pressLparen();
+    else if (b.dataset.action === 'rparen') pressRparen();
+    else if (b.dataset.action === 'equals') pressEquals();
+    else if (b.dataset.action === 'clear') clear();
+    else if (b.dataset.action === 'mplus') pressMplus();
+    else if (b.dataset.action === 'mr') pressMr();
+    else if (b.dataset.action === 'mc') pressMc();
+    else if (b.dataset.action === 'sci') toggleSci();
+    else if (b.dataset.action === 'sqrt' || b.dataset.action === 'square' || b.dataset.action === 'recip') pressSci(b.dataset.action);
+    render();
+    renderTape();
+  }
+
+  function onKeyClick(e) {
+    var b = e.target.closest('button');
+    if (b) press(b);
+  }
+  document.querySelector('.keys').addEventListener('click', onKeyClick);
+  sciPanel.addEventListener('click', onKeyClick);
+
+  // Keyboard entry presses the matching on-screen key.
+  var KEYS = { '.': 'key-dot', '+': 'key-add', '-': 'key-sub', '*': 'key-mul', '/': 'key-div',
+    'Enter': 'key-equals', '=': 'key-equals', 'Escape': 'key-clear' };
+  document.addEventListener('keydown', function (e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    var id = /^[0-9]$/.test(e.key) ? 'key-' + e.key : KEYS[e.key];
+    if (!id) return;
+    // Stops Enter from also clicking a focused button, and / from opening find.
+    e.preventDefault();
+    press(document.querySelector('[data-testid="' + id + '"]'));
+  });
+
+  document.querySelector('[data-testid="tape-clear"]').addEventListener('click', function () {
+    tape = [];
+    renderTape();
+  });
+
+  render();
+</script>
+</body>
+</html>

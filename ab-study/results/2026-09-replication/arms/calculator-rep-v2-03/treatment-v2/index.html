@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculator</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #eceef1;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .calc {
+    width: 320px;
+    max-width: calc(100vw - 32px);
+    background: #1f2227;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  }
+  .screen { position: relative; }
+  .display {
+    color: #fff;
+    font-size: 44px;
+    text-align: right;
+    padding: 16px 8px 20px;
+    min-height: 88px;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .keys {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  button {
+    font: inherit;
+    font-size: 22px;
+    height: 60px;
+    border: none;
+    border-radius: 12px;
+    background: #3a3e45;
+    color: #fff;
+    cursor: pointer;
+  }
+  button:active { filter: brightness(1.25); }
+  button.op { background: #f59e0b; }
+  button.clear { background: #9ca3af; color: #111; }
+  button.wide { grid-column: span 2; }
+  button.mem { height: 44px; font-size: 18px; background: #2c3036; color: #d1d5db; }
+  button.mem[aria-pressed="true"] { background: #f59e0b; color: #111; }
+  .sci { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .sci[hidden] { display: none; }
+  .mem-indicator { position: absolute; top: 8px; left: 8px; font-size: 14px; font-weight: 600; color: #f59e0b; }
+  .mem-indicator[data-active="false"] { opacity: 0.2; }
+  .tape { margin-top: 16px; border-top: 1px solid #3a3e45; padding-top: 12px; }
+  .tape-head { display: flex; justify-content: space-between; align-items: center; color: #9ca3af; font-size: 14px; }
+  .tape-head button { font-size: 14px; height: 28px; padding: 0 12px; background: #3a3e45; }
+  .tape-rows { max-height: 180px; overflow-y: auto; }
+  .tape-row { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; font-size: 15px; }
+  .tape-row + .tape-row { border-top: 1px solid #2c3036; }
+  .tape-expr { color: #9ca3af; overflow-wrap: anywhere; }
+  .tape-result { color: #fff; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="calc">
+  <div class="screen">
+    <!-- [REQ-009] memory indicator, outside the display so its text stays the number -->
+    <span class="mem-indicator" data-testid="mem-indicator" data-active="false">M</span>
+    <div class="display" data-testid="calc-display" data-value="0" data-error="false">0</div>
+  </div>
+  <div class="keys">
+    <!-- [REQ-009] memory keys -->
+    <button class="mem" data-testid="key-mc">MC</button>
+    <button class="mem" data-testid="key-mr">MR</button>
+    <button class="mem" data-testid="key-mplus">M+</button>
+    <!-- [REQ-010] compact scientific panel, closed until key-sci opens it -->
+    <button class="mem" data-testid="key-sci" aria-pressed="false">SCI</button>
+    <div class="sci" hidden>
+      <button class="mem" data-testid="key-sqrt">√x</button>
+      <button class="mem" data-testid="key-square">x²</button>
+      <button class="mem" data-testid="key-recip">1/x</button>
+    </div>
+    <button class="clear wide" data-testid="key-lparen">(</button>
+    <button class="clear wide" data-testid="key-rparen">)</button>
+    <!-- [REQ-006] no % key; AC takes its space -->
+    <button class="clear wide" data-testid="key-clear">AC</button>
+    <button class="clear" data-testid="key-sign">±</button>
+    <button class="op" data-testid="key-div" data-op="/">÷</button>
+    <button data-testid="key-7" data-digit="7">7</button>
+    <button data-testid="key-8" data-digit="8">8</button>
+    <button data-testid="key-9" data-digit="9">9</button>
+    <button class="op" data-testid="key-mul" data-op="*">×</button>
+    <button data-testid="key-4" data-digit="4">4</button>
+    <button data-testid="key-5" data-digit="5">5</button>
+    <button data-testid="key-6" data-digit="6">6</button>
+    <button class="op" data-testid="key-sub" data-op="-">−</button>
+    <button data-testid="key-1" data-digit="1">1</button>
+    <button data-testid="key-2" data-digit="2">2</button>
+    <button data-testid="key-3" data-digit="3">3</button>
+    <button class="op" data-testid="key-add" data-op="+">+</button>
+    <button class="wide" data-testid="key-0" data-digit="0">0</button>
+    <button data-testid="key-dot">.</button>
+    <button class="op" data-testid="key-equals">=</button>
+  </div>
+  <!-- [REQ-007] running tape of past calculations, newest first -->
+  <div class="tape">
+    <div class="tape-head">
+      <span>History</span>
+      <button data-testid="tape-clear">Clear</button>
+    </div>
+    <div class="tape-rows" data-testid="calc-tape"></div>
+  </div>
+</div>
+<script>
+  var displayEl = document.querySelector('[data-testid="calc-display"]');
+  var tapeEl = document.querySelector('[data-testid="calc-tape"]');
+  var OP_SYMBOLS = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+
+  var memIndicatorEl = document.querySelector('[data-testid="mem-indicator"]');
+  var sciPanelEl = document.querySelector('.sci');
+  var sciKeyEl = document.querySelector('[data-testid="key-sci"]');
+
+  var state;
+  // [REQ-009] memory starts at zero, holds the exact value, and survives AC
+  var memory = 0;
+
+  // [REQ-009] M+ adds the exact displayed value (never the rounded text); the entry is finished
+  function memoryAdd() {
+    memory += Number(state.entry);
+    state.typing = false;
+    render();
+  }
+
+  // [REQ-009] MR puts the exact memory value in the display as a result, not typed text
+  function memoryRecall() {
+    state.entry = String(memory);
+    state.entryExpr = null;
+    state.fresh = false;
+    state.typing = false;
+    render();
+  }
+
+  // [REQ-009] MC resets memory to zero; the display is left alone
+  function memoryClear() {
+    memory = 0;
+    render();
+  }
+
+  // [REQ-010] open or close the scientific panel; the calculation is left alone
+  function toggleSci() {
+    sciPanelEl.hidden = !sciPanelEl.hidden;
+    sciKeyEl.setAttribute('aria-pressed', sciPanelEl.hidden ? 'false' : 'true');
+  }
+
+  // [REQ-010] √x, x² and 1/x act on the entry at once; the answer is exact and shown as a result.
+  // √ of a negative and 1/0 are errors; the tape reads √9, 9², 1/9
+  function applyUnary(fn) {
+    var value = Number(state.entry);
+    var result = fn === 'sqrt' ? Math.sqrt(value) : fn === 'square' ? value * value : value === 0 ? null : 1 / value;
+    if (result === null || isNaN(result)) return setError();
+    var text = entryText();
+    if (!/^[0-9(]/.test(text)) text = '(' + text + ')';
+    state.entryExpr = fn === 'sqrt' ? '√' + text : fn === 'square' ? text + '²' : '1/' + text;
+    state.entry = String(result);
+    state.fresh = false;
+    state.typing = false;
+    render();
+  }
+
+  // [REQ-007] the entry as it reads in the expression: a closed group, or the number
+  function entryText() {
+    return state.entryExpr !== null ? state.entryExpr : formatNumber(Number(state.entry));
+  }
+
+  // [REQ-007] add a tape row at the top; data-value holds String(value)
+  function addTapeRow(expr, value) {
+    var row = document.createElement('div');
+    row.className = 'tape-row';
+    row.setAttribute('data-testid', 'tape-row');
+    var exprEl = document.createElement('span');
+    exprEl.className = 'tape-expr';
+    exprEl.setAttribute('data-testid', 'tape-expr');
+    exprEl.textContent = expr;
+    var resultEl = document.createElement('span');
+    resultEl.className = 'tape-result';
+    resultEl.setAttribute('data-testid', 'tape-result');
+    resultEl.setAttribute('data-value', String(value));
+    resultEl.textContent = formatNumber(value);
+    row.appendChild(exprEl);
+    row.appendChild(resultEl);
+    tapeEl.insertBefore(row, tapeEl.firstChild);
+  }
+
+  // [REQ-001] reset to the initial state: display 0, nothing pending
+  // [REQ-003] clear also leaves the error state
+  function clearAll() {
+    state = { entry: '0', stored: null, op: null, fresh: true, typing: false, error: false, groups: [],
+      tokens: [], entryExpr: null };
+    render();
+  }
+
+  // [REQ-001] apply an operator
+  // [REQ-003] exact result, never rounded; division by zero returns null (error)
+  function compute(a, op, b) {
+    if (op === '+') return a + b;
+    if (op === '-') return a - b;
+    if (op === '*') return a * b;
+    if (b === 0) return null;
+    return a / b;
+  }
+
+  // [REQ-003] presentation only: at most 10 significant digits, no trailing zeros,
+  // exponential only when |n| >= 1e10 or |n| < 1e-9
+  function formatNumber(n) {
+    if (n === 0) return '0';
+    if (!isFinite(n)) return String(n);
+    var parts = n.toExponential(9).split('e');
+    var exp = Number(parts[1]);
+    if (exp >= 10 || exp < -9) {
+      return parts[0].replace(/\.?0+$/, '') + 'e' + (exp >= 0 ? '+' : '') + exp;
+    }
+    var sign = n < 0 ? '-' : '';
+    var digits = parts[0].replace('-', '').replace('.', '');
+    var intPart, fracPart;
+    if (exp >= 0) {
+      intPart = digits.slice(0, exp + 1);
+      fracPart = digits.slice(exp + 1);
+    } else {
+      intPart = '0';
+      fracPart = new Array(-exp).join('0') + digits;
+    }
+    fracPart = fracPart.replace(/0+$/, '');
+    return sign + intPart + (fracPart ? '.' + fracPart : '');
+  }
+
+  // [REQ-003] enter the error state
+  function setError() {
+    state.error = true;
+    render();
+  }
+
+  // [REQ-001] digits build the entry
+  // [REQ-004] a shown result (not typed) is replaced, not appended to
+  // [REQ-007] a new number replaces a closed group in the expression
+  function inputDigit(d) {
+    state.entryExpr = null;
+    if (state.fresh || !state.typing) {
+      state.entry = d;
+      state.fresh = false;
+    } else {
+      state.entry = state.entry === '0' ? d : state.entry + d;
+    }
+    state.typing = true;
+    render();
+  }
+
+  // [REQ-001] at most one decimal point per entry
+  function inputDot() {
+    state.entryExpr = null; // [REQ-007]
+    if (state.fresh || !state.typing) {
+      state.entry = '0.';
+      state.fresh = false;
+    } else if (state.entry.indexOf('.') === -1) {
+      state.entry += '.';
+    }
+    state.typing = true;
+    render();
+  }
+
+  // [REQ-004] flip the sign of the current entry; a typed entry keeps its text
+  // [REQ-007] flipping a closed group marks the group with −
+  function inputSign() {
+    if (state.entryExpr !== null) {
+      state.entryExpr = state.entryExpr.charAt(0) === '−' ? state.entryExpr.slice(1) : '−' + state.entryExpr;
+    }
+    if (state.typing) {
+      if (state.entry !== '0') {
+        state.entry = state.entry.charAt(0) === '-' ? state.entry.slice(1) : '-' + state.entry;
+      }
+    } else {
+      state.entry = String(-Number(state.entry) || 0);
+      state.fresh = false;
+    }
+    render();
+  }
+
+  // [REQ-001] store the operator; chains evaluate left to right
+  // [REQ-002] immediate execution: an operator first applies the waiting op and shows the
+  // running result; no precedence, so 2 + 3 × 4 = is 20
+  // [REQ-007] record the entry and operator; a replaced operator replaces its token
+  function inputOp(op) {
+    var current = Number(state.entry);
+    if (state.fresh && state.op !== null) {
+      state.tokens[state.tokens.length - 1] = OP_SYMBOLS[op];
+    } else {
+      state.tokens.push(entryText(), OP_SYMBOLS[op]);
+    }
+    state.entryExpr = null;
+    if (state.op !== null && !state.fresh) {
+      var result = compute(state.stored, state.op, current);
+      if (result === null) return setError();
+      state.entry = String(result);
+      state.stored = result;
+    } else if (state.op === null) {
+      state.stored = current;
+    }
+    state.op = op;
+    state.fresh = true;
+    state.typing = false;
+    render();
+  }
+
+  // [REQ-005] open a group: park the waiting stored value and op; the group starts empty
+  // [REQ-007] the group remembers where its tokens start
+  function openGroup() {
+    state.groups.push({ stored: state.op === null ? null : state.stored, op: state.op, at: state.tokens.length });
+    state.tokens.push('(');
+    state.entryExpr = null;
+    state.stored = null;
+    state.op = null;
+    state.fresh = true;
+    state.typing = false;
+    render();
+  }
+
+  // [REQ-005] close the innermost group: its result becomes the entry for the outer op
+  function closeGroup() {
+    if (state.groups.length === 0) return;
+    var value = Number(state.entry);
+    if (state.op !== null) {
+      value = compute(state.stored, state.op, value);
+      if (value === null) return setError();
+    }
+    var outer = state.groups.pop();
+    // [REQ-007] the whole group becomes the entry's text
+    state.entryExpr = state.tokens.splice(outer.at).concat(entryText(), ')').join(' ');
+    state.stored = outer.stored;
+    state.op = outer.op;
+    state.entry = String(value);
+    state.fresh = false;
+    state.typing = false;
+    render();
+  }
+
+  // [REQ-001] equals shows the result of stored op entry
+  // [REQ-005] equals first closes any open groups
+  // [REQ-007] a completed calculation adds a tape row
+  function equals() {
+    var closed = state.groups.length > 0;
+    while (state.groups.length > 0) {
+      closeGroup();
+      if (state.error) return;
+    }
+    if (state.op === null) {
+      if (closed) {
+        addTapeRow(state.tokens.concat(entryText()).join(' '), Number(state.entry));
+        state.tokens = [];
+        state.entryExpr = null;
+      }
+      return;
+    }
+    var result = compute(state.stored, state.op, Number(state.entry));
+    if (result === null) return setError();
+    addTapeRow(state.tokens.concat(entryText()).join(' '), result);
+    state.tokens = [];
+    state.entryExpr = null;
+    state.entry = String(result);
+    state.stored = null;
+    state.op = null;
+    state.fresh = true;
+    state.typing = false;
+    render();
+  }
+
+  // [REQ-001] data-value holds String(value)
+  // [REQ-003] typed entry shown as typed; other numbers formatted at render time only;
+  // data-value stays exact; data-error always present
+  function render() {
+    var value = Number(state.entry);
+    if (state.error) {
+      displayEl.textContent = 'Error';
+      displayEl.setAttribute('data-value', 'NaN');
+    } else {
+      displayEl.textContent = state.typing ? state.entry : formatNumber(value);
+      displayEl.setAttribute('data-value', String(value));
+    }
+    displayEl.setAttribute('data-error', state.error ? 'true' : 'false');
+    // [REQ-009]
+    memIndicatorEl.setAttribute('data-active', memory !== 0 ? 'true' : 'false');
+  }
+
+  // [REQ-010] one path for clicks and keyboard
+  function press(btn) {
+    var id = btn.getAttribute('data-testid');
+    // [REQ-003] in the error state only clear works
+    if (state.error && id !== 'key-clear') return;
+    if (btn.hasAttribute('data-digit')) inputDigit(btn.getAttribute('data-digit'));
+    else if (btn.hasAttribute('data-op')) inputOp(btn.getAttribute('data-op'));
+    else if (id === 'key-dot') inputDot();
+    else if (id === 'key-equals') equals();
+    else if (id === 'key-sign') inputSign();
+    else if (id === 'key-lparen') openGroup();
+    else if (id === 'key-rparen') closeGroup();
+    else if (id === 'key-clear') clearAll();
+    else if (id === 'key-mplus') memoryAdd();
+    else if (id === 'key-mr') memoryRecall();
+    else if (id === 'key-mc') memoryClear();
+    else if (id === 'key-sci') toggleSci();
+    else if (id === 'key-sqrt') applyUnary('sqrt');
+    else if (id === 'key-square') applyUnary('square');
+    else if (id === 'key-recip') applyUnary('recip');
+  }
+
+  document.querySelector('.keys').addEventListener('click', function (e) {
+    var btn = e.target.closest('button');
+    if (btn) press(btn);
+  });
+
+  // [REQ-010] keyboard: digits and . type, + - * / are operators, Enter or = is equals, Escape clears
+  var KEY_IDS = { '.': 'key-dot', '+': 'key-add', '-': 'key-sub', '*': 'key-mul', '/': 'key-div',
+    'Enter': 'key-equals', '=': 'key-equals', 'Escape': 'key-clear' };
+  document.addEventListener('keydown', function (e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    var id = /^[0-9]$/.test(e.key) ? 'key-' + e.key : KEY_IDS[e.key];
+    if (!id) return;
+    e.preventDefault(); // Enter must not also click a focused button
+    press(document.querySelector('[data-testid="' + id + '"]'));
+  });
+
+  // [REQ-007] clearing the tape leaves the calculator and display alone
+  document.querySelector('[data-testid="tape-clear"]').addEventListener('click', function () {
+    tapeEl.textContent = '';
+  });
+
+  clearAll();
+</script>
+</body>
+</html>

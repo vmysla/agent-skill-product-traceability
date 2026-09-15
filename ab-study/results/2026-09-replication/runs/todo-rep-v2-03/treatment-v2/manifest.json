@@ -1,0 +1,452 @@
+[
+ {
+  "batch": 1,
+  "elapsed_s": 40.5,
+  "cost_usd": 0.19642199999999999,
+  "num_turns": 2,
+  "is_error": false,
+  "timed_out": false,
+  "questions_asked": 0,
+  "questions": [],
+  "usage": {
+   "input_tokens": 4,
+   "cache_creation_input_tokens": 11374,
+   "cache_read_input_tokens": 63286,
+   "output_tokens": 1991,
+   "output_tokens_details": {
+    "thinking_tokens": 216
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 11374,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 189,
+     "cache_read_input_tokens": 36364,
+     "cache_creation_input_tokens": 1932,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 1932
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard"
+  },
+  "passed": 5,
+  "total": 5
+ },
+ {
+  "batch": 2,
+  "elapsed_s": 41.9,
+  "cost_usd": 0.2540555,
+  "num_turns": 8,
+  "is_error": false,
+  "timed_out": false,
+  "questions_asked": 0,
+  "questions": [],
+  "usage": {
+   "input_tokens": 6,
+   "cache_creation_input_tokens": 13363,
+   "cache_read_input_tokens": 103089,
+   "output_tokens": 2710,
+   "output_tokens_details": {
+    "thinking_tokens": 217
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 13363,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 176,
+     "cache_read_input_tokens": 38731,
+     "cache_creation_input_tokens": 3262,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 3262
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard"
+  },
+  "passed": 8,
+  "total": 8
+ },
+ {
+  "batch": 3,
+  "elapsed_s": 42.8,
+  "cost_usd": 0.24517049999999999,
+  "num_turns": 3,
+  "is_error": false,
+  "timed_out": false,
+  "questions_asked": 0,
+  "questions": [],
+  "usage": {
+   "input_tokens": 6,
+   "cache_creation_input_tokens": 13252,
+   "cache_read_input_tokens": 105651,
+   "output_tokens": 2347,
+   "output_tokens_details": {
+    "thinking_tokens": 708
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 13252,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 322,
+     "cache_read_input_tokens": 39942,
+     "cache_creation_input_tokens": 1940,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 1940
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard"
+  },
+  "passed": 10,
+  "total": 10
+ },
+ {
+  "batch": 4,
+  "elapsed_s": 41.3,
+  "cost_usd": 0.23844700000000002,
+  "num_turns": 3,
+  "is_error": false,
+  "timed_out": false,
+  "questions_asked": 0,
+  "questions": [],
+  "usage": {
+   "input_tokens": 6,
+   "cache_creation_input_tokens": 13752,
+   "cache_read_input_tokens": 106578,
+   "output_tokens": 1863,
+   "output_tokens_details": {
+    "thinking_tokens": 549
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 13752,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 161,
+     "cache_read_input_tokens": 40766,
+     "cache_creation_input_tokens": 1616,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 1616
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard"
+  },
+  "passed": 12,
+  "total": 12
+ },
+ {
+  "batch": 5,
+  "elapsed_s": 23.6,
+  "cost_usd": 0.21123550000000002,
+  "num_turns": 3,
+  "is_error": false,
+  "timed_out": false,
+  "questions_asked": 0,
+  "questions": [],
+  "usage": {
+   "input_tokens": 6,
+   "cache_creation_input_tokens": 13519,
+   "cache_read_input_tokens": 107319,
+   "output_tokens": 855,
+   "output_tokens_details": {
+    "thinking_tokens": 99
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 13519,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 123,
+     "cache_read_input_tokens": 41417,
+     "cache_creation_input_tokens": 732,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 732
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard"
+  },
+  "passed": 14,
+  "total": 14
+ },
+ {
+  "batch": 6,
+  "elapsed_s": 34.8,
+  "cost_usd": 0.24044100000000002,
+  "num_turns": 5,
+  "is_error": false,
+  "timed_out": false,
+  "questions_asked": 0,
+  "questions": [],
+  "usage": {
+   "input_tokens": 6,
+   "cache_creation_input_tokens": 14823,
+   "cache_read_input_tokens": 107878,
+   "output_tokens": 1490,
+   "output_tokens_details": {
+    "thinking_tokens": 297
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 14823,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 140,
+     "cache_read_input_tokens": 41807,
+     "cache_creation_input_tokens": 1646,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 1646
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard"
+  },
+  "passed": 15,
+  "total": 15
+ },
+ {
+  "batch": 7,
+  "elapsed_s": 45.9,
+  "cost_usd": 0.2672685,
+  "num_turns": 3,
+  "is_error": false,
+  "timed_out": false,
+  "questions_asked": 0,
+  "questions": [],
+  "usage": {
+   "input_tokens": 6,
+   "cache_creation_input_tokens": 15331,
+   "cache_read_input_tokens": 107987,
+   "output_tokens": 2355,
+   "output_tokens_details": {
+    "thinking_tokens": 629
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 15331,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 133,
+     "cache_read_input_tokens": 41824,
+     "cache_creation_input_tokens": 2137,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 2137
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard"
+  },
+  "passed": 17,
+  "total": 17
+ },
+ {
+  "batch": 8,
+  "elapsed_s": 24.6,
+  "cost_usd": 0.21984700000000001,
+  "num_turns": 4,
+  "is_error": false,
+  "timed_out": false,
+  "questions_asked": 0,
+  "questions": [],
+  "usage": {
+   "input_tokens": 8,
+   "cache_creation_input_tokens": 11447,
+   "cache_read_input_tokens": 142750,
+   "output_tokens": 1317,
+   "output_tokens_details": {
+    "thinking_tokens": 244
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 11447,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 353,
+     "cache_read_input_tokens": 39230,
+     "cache_creation_input_tokens": 847,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 847
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard"
+  },
+  "passed": 19,
+  "total": 19
+ },
+ {
+  "batch": 9,
+  "elapsed_s": 30.7,
+  "cost_usd": 0.24203449999999999,
+  "num_turns": 3,
+  "is_error": false,
+  "timed_out": false,
+  "questions_asked": 0,
+  "questions": [],
+  "usage": {
+   "input_tokens": 6,
+   "cache_creation_input_tokens": 15291,
+   "cache_read_input_tokens": 108009,
+   "output_tokens": 1363,
+   "output_tokens_details": {
+    "thinking_tokens": 218
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 15291,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 216,
+     "cache_read_input_tokens": 42862,
+     "cache_creation_input_tokens": 1059,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 1059
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard"
+  },
+  "passed": 22,
+  "total": 22
+ },
+ {
+  "batch": 10,
+  "elapsed_s": 40.8,
+  "cost_usd": 0.29047100000000003,
+  "num_turns": 4,
+  "is_error": false,
+  "timed_out": false,
+  "questions_asked": 0,
+  "questions": [],
+  "usage": {
+   "input_tokens": 8,
+   "cache_creation_input_tokens": 16396,
+   "cache_read_input_tokens": 154228,
+   "output_tokens": 1933,
+   "output_tokens_details": {
+    "thinking_tokens": 672
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 16396,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 419,
+     "cache_read_input_tokens": 44620,
+     "cache_creation_input_tokens": 406,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 406
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard"
+  },
+  "passed": 24,
+  "total": 24
+ }
+]

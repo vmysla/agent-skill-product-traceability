@@ -1,0 +1,72 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["nothing_to_record", "requirement", "decisions", "non_decisions", "supersedes"],
+  "properties": {
+    "nothing_to_record": {
+      "type": "boolean",
+      "description": "true only when the turn did no requirement work (a question answered, a no-op)"
+    },
+    "requirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "statement", "status", "acceptance", "sub_requirements"],
+      "properties": {
+        "id": {"type": "string", "description": "REQ-nnn this turn worked on"},
+        "title": {"type": "string", "description": "short noun phrase, max 10 words"},
+        "statement": {"type": "string", "description": "one sentence: what the product must do"},
+        "status": {"type": "string", "enum": ["done", "partial", "blocked", "not_applicable"]},
+        "acceptance": {"type": "array", "items": {"type": "string"},
+                       "description": "checkable behaviours delivered this turn"},
+        "sub_requirements": {"type": "array", "items": {"type": "string"},
+                             "description": "distinct sub-goals when the prompt asked for several"}
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "source", "title", "chose", "why", "rejected", "evidence", "supersedes_decisions"],
+        "properties": {
+          "supersedes_decisions": {"type": "array", "items": {"type": "string"},
+                                   "description": "ids from Existing decisions that this rule refines or replaces; empty if none"},
+          "kind": {"type": "string", "enum": ["rule", "choice"],
+                   "description": "rule = a convention, format, invariant or comparison that every later change must honour; choice = a one-off implementation decision"},
+          "source": {"type": "string", "enum": ["user", "assistant"],
+                     "description": "user = the prompt stated it as a standing decision; assistant = the assistant chose it"},
+          "title": {"type": "string"},
+          "chose": {"type": "string"},
+          "why": {"type": "string"},
+          "rejected": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["option", "drawback"],
+              "properties": {"option": {"type": "string"}, "drawback": {"type": "string"}}
+            }
+          },
+          "evidence": {"type": "string",
+                       "description": "verbatim quote from the assistant message or diff"}
+        }
+      }
+    },
+    "non_decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["option", "why_not_done", "evidence"],
+        "properties": {
+          "option": {"type": "string"},
+          "why_not_done": {"type": "string"},
+          "evidence": {"type": "string",
+                       "description": "verbatim quote from the assistant message or diff"}
+        }
+      }
+    },
+    "supersedes": {"type": "array", "items": {"type": "string"},
+                   "description": "REQ ids this requirement replaces"}
+  }
+}

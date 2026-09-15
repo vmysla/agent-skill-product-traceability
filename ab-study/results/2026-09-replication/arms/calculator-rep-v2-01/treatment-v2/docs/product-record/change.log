@@ -1,0 +1,13 @@
+# Change log
+_Regenerated from the journal by product-record hooks. Newest first._
+
+2026-09-13T01:08:09Z  71d1c4a8  REQ-010  | I added the `sci` key, which opens a small panel with √x, x² and 1/x. Each acts on the current number right away: `9 √` shows `3`, `√` of a negative or `1/0` sh... | 1 file changed, 49 insertions(+), 3 deletions(-) [index.html]
+2026-09-13T01:06:16Z  9265093d  REQ-009  | I added MC, MR and M+ keys and an "M" memory light in the corner of the display, with the test ids you listed. The script passes a syntax check, but I haven't c... | 1 file changed, 49 insertions(+), 3 deletions(-) [index.html]
+2026-09-13T01:04:58Z  6885fcbf  REQ-008  | I couldn't reproduce this. The tape already shows the same text as the display. I ran both cases in headless Chrome against the current `index.html`: | Keys | D... | no diff
+2026-09-13T01:03:27Z  35bcffdc  REQ-007  | I added the running tape to `index.html`, with all the test ids you listed. A syntax check of the script passed, but I have not tried the tape in a browser. Eac... | 1 file changed, 108 insertions(+), 13 deletions(-) [index.html]
+2026-09-13T01:01:18Z  44487a0a  REQ-006  | I took the `%` key off the keypad and made AC two keys wide so the row stays full. The `%` shortcut on the physical keyboard is also gone, so percent can't be d... | 1 file changed, 6 insertions(+), 15 deletions(-) [index.html]
+2026-09-13T01:00:35Z  56ac2977  REQ-005  | I added `(` and `)` keys: `2 + ( 3 × 4 ) =` shows `14`, `( 2 + 3 ) × 4 =` shows `20`, and nested groups work (`2 × ( 1 + ( 2 × 3 ) ) =` gives `14`). Inside a gr... | 1 file changed, 42 insertions(+), 5 deletions(-) [index.html]
+2026-09-13T00:59:22Z  b99fad08  REQ-004  | I added the `±` key (`key-sign`) and the `%` key (`key-percent`) to `index.html`. `5 ±` shows `-5`, a second press shows `5`, and `50 %` shows `0.5`. I checked ... | 1 file changed, 35 insertions(+), 10 deletions(-) [index.html]
+2026-09-13T00:57:51Z  a4397485  REQ-003  | I added both features: numbers are rounded only when shown, and dividing by zero now puts the calculator in an error state. I tested the rounding function in no... | 1 file changed, 25 insertions(+), 8 deletions(-) [index.html]
+2026-09-13T00:56:44Z  5456ab96  REQ-002  | I didn't need to change any logic: the calculator already chains operations left to right. The operator key already finishes the waiting operation first, so `2 ... | 1 file changed, 4 insertions(+), 1 deletion(-) [index.html]
+2026-09-13T00:56:10Z  0a9eb3e1  REQ-001  | I built `index.html` as one file with inline CSS and JS and all the required `data-testid` attributes. I haven't opened it in a browser or run any tests. I only... | no diff [index.html (new)]

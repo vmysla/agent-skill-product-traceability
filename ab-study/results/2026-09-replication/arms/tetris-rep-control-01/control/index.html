@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tetris</title>
+<style>
+  :root {
+    --cell: 28px;
+    --bg: #14161c;
+    --panel: #1e2129;
+    --line: #2a2e38;
+    --text: #e8eaf0;
+    --muted: #9aa0ad;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .game {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    padding: 20px;
+  }
+  .board-wrap { position: relative; }
+  .board {
+    display: grid;
+    grid-template-columns: repeat(10, var(--cell));
+    grid-template-rows: repeat(20, var(--cell));
+    gap: 1px;
+    padding: 1px;
+    background: var(--line);
+    border: 2px solid var(--line);
+  }
+  .cell { background: var(--panel); }
+  .cell[data-filled="true"] { box-shadow: inset 0 0 0 2px rgba(255,255,255,0.18); }
+  .cell[data-ghost="true"] { box-shadow: inset 0 0 0 2px rgba(255,255,255,0.35); }
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.6);
+    font-size: 24px;
+    font-weight: 600;
+  }
+  .side {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 140px;
+  }
+  .box {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    padding: 10px 12px;
+  }
+  .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .value { font-size: 22px; font-weight: 600; margin-top: 2px; }
+  .next-list { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+  .mini {
+    display: grid;
+    grid-template-columns: repeat(4, 16px);
+    grid-template-rows: repeat(2, 16px);
+    gap: 1px;
+  }
+  .mini-cell { background: transparent; }
+  .hold { margin-top: 8px; min-height: 33px; }
+  button {
+    font: inherit;
+    color: var(--text);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--muted); }
+  .help { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .p-I { background: #22c7e0; }
+  .p-O { background: #f2c511; }
+  .p-T { background: #9b4dca; }
+  .p-S { background: #3cb44b; }
+  .p-Z { background: #e6194b; }
+  .p-J { background: #2f6fdf; }
+  .p-L { background: #f58231; }
+</style>
+</head>
+<body>
+<div class="game">
+  <div class="board-wrap">
+    <div class="board" data-testid="board" id="board"></div>
+  </div>
+  <div class="side">
+    <div class="box">
+      <div class="label">Score</div>
+      <div class="value" data-testid="score" id="score">0</div>
+    </div>
+    <div class="box">
+      <div class="label">Level</div>
+      <div class="value" data-testid="level" id="level">1</div>
+    </div>
+    <div class="box">
+      <div class="label">Lines</div>
+      <div class="value" data-testid="lines" id="lines">0</div>
+    </div>
+    <div class="box">
+      <div class="label">Hold</div>
+      <div class="hold" data-testid="hold-piece" data-piece="" id="hold"></div>
+    </div>
+    <div class="box">
+      <div class="label">Next</div>
+      <div class="next-list" data-testid="next-piece" id="next"></div>
+    </div>
+    <button type="button" data-testid="pause-btn" id="pause">Pause</button>
+    <button type="button" data-testid="restart-btn" id="new-game">New game</button>
+    <div class="help">
+      ← → move<br>
+      ↓ soft drop<br>
+      Space hard drop<br>
+      ↑ rotate<br>
+      C hold<br>
+      P pause<br>
+      R new game
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var ROWS = 20;
+  var COLS = 10;
+  var TYPES = ["I", "O", "T", "S", "Z", "J", "L"];
+  var PREVIEW = 1;
+  var LINES_PER_LEVEL = 10;
+  var LOCK_DELAY_TICKS = 2;   // gravity steps a piece may spend unable to fall
+  var MAX_LOCK_RESETS = 3;    // times per piece a sideways move or soft drop restarts the delay
+
+  // Points for rows cleared at once, times the level. Clearing rows together
+  // must always beat clearing the same rows one at a time.
+  var CLEAR_POINTS = [0, 100, 300, 500, 800];
+  var SOFT_DROP_POINTS = 1;   // per cell moved down by soft drop
+  var HARD_DROP_POINTS = 2;   // per cell dropped by hard drop
+
+  // Each shape is a square matrix; spawn puts its filled cells in rows 0-1.
+  var SHAPES = {
+    I: { m: ["....", "IIII", "....", "...."], row: -1, col: 3 },
+    O: { m: ["OO", "OO"], row: 0, col: 4 },
+    T: { m: [".T.", "TTT", "..."], row: 0, col: 3 },
+    S: { m: [".SS", "SS.", "..."], row: 0, col: 3 },
+    Z: { m: ["ZZ.", ".ZZ", "..."], row: 0, col: 3 },
+    J: { m: ["J..", "JJJ", "..."], row: 0, col: 3 },
+    L: { m: ["..L", "LLL", "..."], row: 0, col: 3 }
+  };
+
+  // ---- State ----
+  var board;        // board[row][col] = "" or piece letter
+  var current;      // { type, matrix, row, col, lockTicks, lockResets } or null
+  var held;         // letter in the hold slot, or null
+  var holdUsed;     // true after a hold, until the next piece locks
+  var next;         // upcoming piece letters, soonest first
+  var scripted;     // true while `next` comes from a test-supplied queue
+  var bag = [];
+  var score, level, lines, status;
+  var timer = null;
+  var timerInterval = 0;
+  var stepDueAt = 0;      // Date.now() when the next gravity step fires
+  var pausedRemaining = 0; // ms left until the next gravity step, kept while paused
+
+  function emptyBoard() {
+    var b = [];
+    for (var r = 0; r < ROWS; r++) {
+      var row = [];
+      for (var c = 0; c < COLS; c++) row.push("");
+      b.push(row);
+    }
+    return b;
+  }
+
+  function randomType() {
+    if (bag.length === 0) {
+      bag = TYPES.slice();
+      for (var i = bag.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = bag[i]; bag[i] = bag[j]; bag[j] = t;
+      }
+    }
+    return bag.pop();
+  }
+
+  function fillPreview() {
+    if (scripted) return;
+    while (next.length < PREVIEW) next.push(randomType());
+  }
+
+  function shapeCells(matrix, row, col) {
+    var cells = [];
+    for (var r = 0; r < matrix.length; r++) {
+      for (var c = 0; c < matrix[r].length; c++) {
+        if (matrix[r][c] !== ".") cells.push([row + r, col + c]);
+      }
+    }
+    return cells;
+  }
+
+  function fits(matrix, row, col) {
+    var cells = shapeCells(matrix, row, col);
+    for (var i = 0; i < cells.length; i++) {
+      var r = cells[i][0], c = cells[i][1];
+      if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return false;
+      if (board[r][c] !== "") return false;
+    }
+    return true;
+  }
+
+  // Milliseconds between gravity steps at the current level.
+  function dropInterval() {
+    return Math.max(100, 1000 - (level - 1) * 100);
+  }
+
+  function spawn() {
+    if (next.length === 0) scripted = false;
+    fillPreview();
+    var type = next.shift();
+    fillPreview();
+    enter(type);
+  }
+
+  // Puts a piece of the given type at the spawn position, or ends the game.
+  function enter(type) {
+    var s = SHAPES[type];
+    var piece = {
+      type: type, matrix: s.m.slice(), row: s.row, col: s.col,
+      lockTicks: 0,   // consecutive gravity steps spent unable to fall
+      lockResets: 0   // lifetime count of lock-delay restarts
+    };
+    if (!fits(piece.matrix, piece.row, piece.col)) {
+      current = null;
+      status = "gameover";
+      stopTimer();
+      return;
+    }
+    current = piece;
+  }
+
+  function lock() {
+    var cells = shapeCells(current.matrix, current.row, current.col);
+    for (var i = 0; i < cells.length; i++) {
+      board[cells[i][0]][cells[i][1]] = current.type;
+    }
+    current = null;
+    holdUsed = false;
+    clearLines();
+    spawn();
+  }
+
+  // Sets the falling piece aside. The first hold brings in the next piece;
+  // later holds swap with the held one. Once per piece until it locks.
+  function hold() {
+    if (!current || holdUsed) return;
+    var type = current.type;
+    current = null;
+    holdUsed = true;
+    if (held === null) {
+      held = type;
+      spawn();
+    } else {
+      var out = held;
+      held = type;
+      enter(out);
+    }
+  }
+
+  // Removes every full row; rows above drop down.
+  function clearLines() {
+    var kept = board.filter(function (row) {
+      return row.some(function (v) { return v === ""; });
+    });
+    var cleared = ROWS - kept.length;
+    if (cleared === 0) return;
+    while (kept.length < ROWS) kept.unshift(emptyBoard()[0]);
+    board = kept;
+    // Points use the level the clear was made at.
+    score += CLEAR_POINTS[Math.min(cleared, 4)] * level;
+    var levelsGained = Math.floor((lines + cleared) / LINES_PER_LEVEL) -
+      Math.floor(lines / LINES_PER_LEVEL);
+    lines += cleared;
+    if (levelsGained > 0) setLevelValue(level + levelsGained);
+  }
+
+  // Changes the level and keeps the gravity timer in step with it.
+  function setLevelValue(n) {
+    level = n;
+    if (timer !== null && timerInterval !== dropInterval()) startTimer();
+  }
+
+  function tryMove(dr, dc) {
+    if (!current) return false;
+    if (!fits(current.matrix, current.row + dr, current.col + dc)) return false;
+    current.row += dr;
+    current.col += dc;
+    return true;
+  }
+
+  // The single gravity step, used by the real timer and tick().
+  // A step that cannot move the piece down counts one tick of lock delay.
+  // Returns true if the piece moved down.
+  function gravityStep() {
+    if (status !== "running" || !current) return false;
+    if (tryMove(1, 0)) {
+      current.lockTicks = 0;
+      return true;
+    }
+    current.lockTicks++;
+    if (current.lockTicks >= LOCK_DELAY_TICKS) lock();
+    return false;
+  }
+
+  // Restarts a running lock delay, up to MAX_LOCK_RESETS times per piece.
+  function restartLockDelay() {
+    if (current.lockTicks > 0 && current.lockResets < MAX_LOCK_RESETS) {
+      current.lockResets++;
+      current.lockTicks = 0;
+    }
+  }
+
+  // Soft drop. If the piece cannot fall, it counts like a sideways move:
+  // it restarts a running lock delay and never adds a lock tick itself.
+  function softDrop() {
+    if (tryMove(1, 0)) {
+      current.lockTicks = 0;
+      score += SOFT_DROP_POINTS;
+    } else {
+      restartLockDelay();
+    }
+  }
+
+  // Left/right. A move made while the lock delay is running restarts it.
+  function shift(dc) {
+    if (tryMove(0, dc)) restartLockDelay();
+  }
+
+  // Clockwise rotation. Tries the rotated shape in place, then shifted
+  // sideways; if none fit, the piece is left unchanged.
+  function rotateCW() {
+    if (!current) return;
+    var m = current.matrix;
+    var n = m.length;
+    var rotated = [];
+    for (var r = 0; r < n; r++) {
+      var line = "";
+      for (var c = 0; c < n; c++) line += m[n - 1 - c][r];
+      rotated.push(line);
+    }
+    var kicks = [0, -1, 1, -2, 2];
+    for (var i = 0; i < kicks.length; i++) {
+      var nc = current.col + kicks[i];
+      if (fits(rotated, current.row, nc)) {
+        current.matrix = rotated;
+        current.col = nc;
+        return;
+      }
+    }
+  }
+
+  // Cells the falling piece would occupy if dropped straight down.
+  function ghostCells() {
+    if (!current) return [];
+    var row = current.row;
+    while (fits(current.matrix, row + 1, current.col)) row++;
+    return shapeCells(current.matrix, row, current.col);
+  }
+
+  // Pausing freezes the gravity timer part-way through its interval and
+  // resumes from the same point, so pause/resume cannot hold off a lock tick.
+  // Lock ticks and restarts belong to the piece and are left untouched.
+  function togglePause() {
+    if (status === "running") {
+      pausedRemaining = Math.max(0, stepDueAt - Date.now());
+      stopTimer();
+      status = "paused";
+    } else if (status === "paused") {
+      status = "running";
+      startTimer(pausedRemaining);
+    }
+  }
+
+  // Hard drop skips the lock delay.
+  function hardDrop() {
+    if (!current) return;
+    while (tryMove(1, 0)) score += HARD_DROP_POINTS;
+    lock();
+  }
+
+  function applyInput(action) {
+    if (action === "pause") { togglePause(); return; }
+    if (status !== "running" || !current) return;
+    switch (action) {
+      case "left": shift(-1); break;
+      case "right": shift(1); break;
+      case "softDrop": softDrop(); break;
+      case "hardDrop": hardDrop(); break;
+      case "rotateCW":
+      case "rotate": rotateCW(); break;
+      case "hold": hold(); break;
+    }
+  }
+
+  // ---- Timer ----
+  function stopTimer() {
+    if (timer !== null) { clearTimeout(timer); timer = null; }
+  }
+
+  // Starts gravity at the current level. The first step comes after
+  // firstDelay ms (default: a full interval), later ones every interval.
+  function startTimer(firstDelay) {
+    stopTimer();
+    timerInterval = dropInterval();
+    scheduleStep(firstDelay === undefined ? timerInterval : Math.min(firstDelay, timerInterval));
+  }
+
+  function scheduleStep(delay) {
+    stepDueAt = Date.now() + delay;
+    timer = setTimeout(function () {
+      // Schedule first: a lock inside the step may restart or stop the timer.
+      scheduleStep(timerInterval);
+      gravityStep();
+      render();
+    }, delay);
+  }
+
+  // ---- Rendering (synchronous) ----
+  var boardEl = document.getElementById("board");
+  var nextEl = document.getElementById("next");
+  var holdEl = document.getElementById("hold");
+  var boardWrapEl = boardEl.parentNode;
+  var overlayEl = document.createElement("div");
+  overlayEl.className = "overlay";
+  overlayEl.setAttribute("data-testid", "game-over");
+  overlayEl.textContent = "Game over";
+  var pausedEl = document.createElement("div");
+  pausedEl.className = "overlay";
+  pausedEl.setAttribute("data-testid", "paused-indicator");
+  pausedEl.textContent = "Paused";
+  var pauseBtn = document.getElementById("pause");
+  var scoreEl = document.getElementById("score");
+  var levelEl = document.getElementById("level");
+  var linesEl = document.getElementById("lines");
+  var cellEls = [];
+
+  (function buildBoard() {
+    for (var r = 0; r < ROWS; r++) {
+      cellEls.push([]);
+      for (var c = 0; c < COLS; c++) {
+        var el = document.createElement("div");
+        el.className = "cell";
+        el.setAttribute("data-testid", "cell");
+        el.setAttribute("data-row", String(r));
+        el.setAttribute("data-col", String(c));
+        el.setAttribute("data-filled", "false");
+        el.setAttribute("data-piece", "");
+        el.setAttribute("data-ghost", "false");
+        boardEl.appendChild(el);
+        cellEls[r].push(el);
+      }
+    }
+  })();
+
+  // A ghost cell is drawn only where nothing else is; it is never filled.
+  function paintCell(el, piece, ghost) {
+    el.className = piece ? "cell p-" + piece : "cell";
+    el.setAttribute("data-filled", piece ? "true" : "false");
+    el.setAttribute("data-piece", piece);
+    el.setAttribute("data-ghost", ghost && !piece ? "true" : "false");
+  }
+
+  // Keeps an overlay in the DOM only while `show` is true.
+  function toggleOverlay(el, show) {
+    if (show) {
+      if (!el.parentNode) boardWrapEl.appendChild(el);
+    } else if (el.parentNode) {
+      el.parentNode.removeChild(el);
+    }
+  }
+
+  // A 4x2 picture of a piece in its spawn orientation.
+  function miniPiece(type) {
+    var m = SHAPES[type].m;
+    var offset = type === "I" ? 1 : 0; // I's filled row is row 1 of its matrix
+    var mini = document.createElement("div");
+    mini.className = "mini";
+    for (var r = 0; r < 2; r++) {
+      for (var c = 0; c < 4; c++) {
+        var ch = m[r + offset] && m[r + offset][c];
+        var cell = document.createElement("div");
+        cell.className = ch && ch !== "." ? "mini-cell p-" + type : "mini-cell";
+        mini.appendChild(cell);
+      }
+    }
+    return mini;
+  }
+
+  function renderNext() {
+    nextEl.textContent = "";
+    for (var i = 0; i < Math.min(next.length, PREVIEW); i++) {
+      var mini = miniPiece(next[i]);
+      mini.setAttribute("data-testid", "next-piece-item");
+      mini.setAttribute("data-piece", next[i]);
+      nextEl.appendChild(mini);
+    }
+  }
+
+  function renderHold() {
+    if (holdEl.getAttribute("data-piece") === (held || "")) return;
+    holdEl.textContent = "";
+    holdEl.setAttribute("data-piece", held || "");
+    if (held) holdEl.appendChild(miniPiece(held));
+  }
+
+  function render() {
+    var view = board.map(function (row) { return row.slice(); });
+    var ghost = board.map(function (row) { return row.map(function () { return false; }); });
+    var g = ghostCells();
+    for (var k = 0; k < g.length; k++) ghost[g[k][0]][g[k][1]] = true;
+    if (current) {
+      var cells = shapeCells(current.matrix, current.row, current.col);
+      for (var i = 0; i < cells.length; i++) {
+        view[cells[i][0]][cells[i][1]] = current.type;
+      }
+    }
+    for (var r = 0; r < ROWS; r++) {
+      for (var c = 0; c < COLS; c++) paintCell(cellEls[r][c], view[r][c], ghost[r][c]);
+    }
+    scoreEl.textContent = String(score);
+    levelEl.textContent = String(level);
+    linesEl.textContent = String(lines);
+    toggleOverlay(overlayEl, status === "gameover");
+    toggleOverlay(pausedEl, status === "paused");
+    pauseBtn.textContent = status === "paused" ? "Resume" : "Pause";
+    renderNext();
+    renderHold();
+  }
+
+  // ---- Game control ----
+  function validTypes(queue) {
+    if (!Array.isArray(queue)) return [];
+    return queue.filter(function (t) { return SHAPES.hasOwnProperty(t); });
+  }
+
+  function newGame(queue) {
+    board = emptyBoard();
+    score = 0;
+    level = 1;
+    lines = 0;
+    status = "running";
+    current = null;
+    held = null;
+    holdUsed = false;
+    bag = [];
+    if (Array.isArray(queue)) {
+      next = validTypes(queue);
+      scripted = true;
+    } else {
+      next = [];
+      scripted = false;
+    }
+    spawn();
+    startTimer();
+    render();
+  }
+
+  function setQueue(queue) {
+    next = validTypes(queue);
+    scripted = true;
+    render();
+  }
+
+  function setBoard(rows) {
+    var b = emptyBoard();
+    for (var r = 0; r < ROWS; r++) {
+      var line = (rows && rows[r]) || "";
+      for (var c = 0; c < COLS; c++) {
+        var ch = line.charAt(c);
+        b[r][c] = SHAPES.hasOwnProperty(ch) ? ch : "";
+      }
+    }
+    board = b;
+    render();
+  }
+
+  function getBoard() {
+    return board.map(function (row) {
+      return row.map(function (v) { return v || "."; }).join("");
+    });
+  }
+
+  function getState() {
+    function byPosition(a, b) { return a[0] - b[0] || a[1] - b[1]; }
+    var cur = null;
+    if (current) {
+      var cells = shapeCells(current.matrix, current.row, current.col);
+      cells.sort(byPosition);
+      cur = { type: current.type, cells: cells };
+    }
+    return {
+      current: cur,
+      next: next.slice(),
+      score: score,
+      level: level,
+      lines: lines,
+      dropInterval: dropInterval(),
+      hold: held,
+      ghost: ghostCells().sort(byPosition),
+      status: status
+    };
+  }
+
+  function setLevel(n) {
+    var value = Math.floor(Number(n));
+    if (!(value >= 1)) return;
+    setLevelValue(value);
+    render();
+  }
+
+  function tick(n) {
+    var steps = n === undefined ? 1 : Math.max(0, Math.floor(Number(n)) || 0);
+    for (var i = 0; i < steps; i++) gravityStep();
+    render();
+  }
+
+  window.__tetris = {
+    newGame: newGame,
+    setQueue: setQueue,
+    setBoard: setBoard,
+    tick: tick,
+    setLevel: setLevel,
+    input: function (action) { applyInput(action); render(); },
+    getBoard: getBoard,
+    getState: getState
+  };
+
+  // ---- Keyboard ----
+  var KEYS = {
+    ArrowLeft: "left",
+    ArrowRight: "right",
+    ArrowDown: "softDrop",
+    " ": "hardDrop",
+    ArrowUp: "rotateCW",
+    c: "hold",
+    C: "hold",
+    Shift: "hold",
+    p: "pause",
+    P: "pause",
+    Escape: "pause",
+    r: "restart",
+    R: "restart"
+  };
+
+  // Held-down keys repeat; these actions happen once per press.
+  var NO_REPEAT = { hardDrop: true, hold: true, pause: true, restart: true };
+
+  document.addEventListener("keydown", function (e) {
+    var action = KEYS[e.key];
+    if (!action || e.metaKey || e.ctrlKey || e.altKey) return;
+    e.preventDefault();
+    if (e.repeat && NO_REPEAT[action]) return;
+    if (action === "restart") newGame();
+    else window.__tetris.input(action);
+  });
+
+  pauseBtn.addEventListener("click", function (e) {
+    e.currentTarget.blur();
+    window.__tetris.input("pause");
+  });
+
+  document.getElementById("new-game").addEventListener("click", function (e) {
+    e.currentTarget.blur();
+    newGame();
+  });
+
+  newGame();
+})();
+</script>
+</body>
+</html>

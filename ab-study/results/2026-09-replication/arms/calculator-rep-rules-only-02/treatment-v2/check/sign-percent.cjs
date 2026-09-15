@@ -1,0 +1,17 @@
+const fs = require('fs');
+const assert = require('assert');
+const src = fs.readFileSync(__dirname + '/../index.html', 'utf8').match(/<script>([\s\S]*)<\/script>/)[1];
+const { press, displayText, initialState } = new Function(src + '; return { press, displayText, initialState };')();
+const run = keys => displayText(keys.split(' ').reduce(press, initialState()));
+assert.strictEqual(run('5 sign'), '-5');
+assert.strictEqual(run('5 sign sign'), '5');
+assert.strictEqual(run('5 sign 3'), '-53');
+assert.strictEqual(run('5 0 percent'), '0.5');
+assert.strictEqual(run('1 dot 1 percent'), '0.011');
+assert.strictEqual(run('1 2 0 0 percent'), '12');
+assert.strictEqual(run('2 0 0 add 5 0 percent equals'), '200.5');
+assert.strictEqual(run('9 sub sign 3 equals'), '12');
+assert.strictEqual(run('5 add 5 equals sign'), '-10');
+assert.strictEqual(run('5 add 5 equals percent'), '0.1');
+assert.strictEqual(run('1 div 0 equals sign'), 'Error');
+console.log('ok');

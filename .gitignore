@@ -5,5 +5,17 @@
 .idea/
 .vscode/
 
-# Per-project session logs written by the hooks themselves.
+# Python bytecode
+__pycache__/
+
+# This project's own traceability records are private. They live in the
+# product-tracebility-ab-testing repository, not here (see README, Contributing).
+# v1 records and session logs:
+/requirements.md
+/change.log
+/decisions.md
+/traceability-matrix.md
 .product-traceability/
+# v2 record and working state:
+/docs/product-traceability/
+/.claude/pr/

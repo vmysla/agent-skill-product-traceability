@@ -1,0 +1,13 @@
+# Change log
+_Regenerated from the journal by product-record hooks. Newest first._
+
+2026-09-13T03:43:46Z  e6687f8d  REQ-010  | I added keyboard entry and a SCI key that opens a small panel with √x, x² and 1/x. Each acts on the current entry at once, so `9 √` shows 3. √ of a negative num... | 1 file changed, 56 insertions(+), 4 deletions(-) [index.html]
+2026-09-13T03:41:25Z  cd8c5779  REQ-009  | I added M+, MR, MC and the memory indicator. Memory stores the exact value and shows it rounded to 10 digits, so 0.1 M+ 0.2 M+ MR shows 0.3. Memory keys do noth... | 1 file changed, 44 insertions(+), 1 deletion(-) [index.html]
+2026-09-13T03:37:42Z  0f873b6d  REQ-008  | I couldn't reproduce this, so I changed nothing. - **How I tested:** I ran the page in headless Chrome and clicked the keys. For `0.1 + 0.2 =` the display shows... | no diff
+2026-09-13T03:36:28Z  96085906  REQ-007  | I added the tape below the keypad in `index.html`. A browser-engine test gave the expected rows, newest first. Clearing the tape left the display at 16. - **Wha... | 1 file changed, 82 insertions(+), 3 deletions(-) [index.html]
+2026-09-13T03:34:23Z  300cdcda  REQ-006  | I removed the `%` key and the code behind it from `index.html`. `±` still works as before. To keep that row lined up, `AC` is now twice as wide and fills the ga... | 1 file changed, 2 insertions(+), 11 deletions(-) [index.html]
+2026-09-13T03:33:41Z  7dd1bc14  REQ-005  | I added `(` and `)` keys in `index.html`, in a new top row. Both examples work: `2 + ( 3 × 4 ) =` gives 14 and `( 2 + 3 ) × 4 =` gives 20, and nested groups wor... | 1 file changed, 37 insertions(+), 1 deletion(-) [index.html]
+2026-09-13T03:32:39Z  24ecd75b  REQ-004  | I added `±` (`key-sign`) and `%` (`key-percent`) in `index.html`. I checked the logic by reading it; I haven't opened the page in a browser. I moved keys so the... | 1 file changed, 33 insertions(+), 7 deletions(-) [index.html]
+2026-09-13T03:31:24Z  d53c6fb6  REQ-003  | Numbers are now rounded only when shown: at most 10 significant digits, no trailing zeros, and exponent form only at 1e10 and above or below 1e-9. What you type... | 1 file changed, 60 insertions(+), 12 deletions(-) [index.html]
+2026-09-13T03:30:00Z  d274dc02  REQ-002  | Chained calculations with immediate execution already worked, so I only added a `// [REQ-002]` note on `inputOp` in `index.html`. I checked it by walking throug... | 1 file changed, 2 insertions(+) [index.html]
+2026-09-13T03:29:22Z  42e6eb5e  REQ-001  | I built the calculator as a single `index.html` file with inline CSS and JS; I haven't opened it in a browser or run any tests. - **Display vs. `data-value`:** ... | no diff [index.html (new)]

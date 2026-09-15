@@ -1,0 +1,10 @@
+# Installed by npm install
+/node_modules/
+
+# Output of your own runs (the published runs are in results/2026-09-replication/)
+/runs/
+/arms/
+/results/local/
+
+__pycache__/
+.DS_Store

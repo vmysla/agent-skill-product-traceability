@@ -1,0 +1,117 @@
+{
+ "ts": "2026-09-13T05:39:28Z",
+ "source_map": [
+  {
+   "file": "index.html",
+   "lines": 480,
+   "functions": [
+    "emptyBoard@L113",
+    "randomLetter@L119",
+    "validLetters@L123",
+    "fillUpcoming@L128",
+    "takeNext@L133",
+    "spawn@L140",
+    "fits@L157",
+    "canMove@L163",
+    "tryMove@L167",
+    "tryRotateCW@L177",
+    "restartLockDelay@L198",
+    "shift@L204",
+    "softDrop@L210",
+    "clearLines@L216",
+    "dropInterval@L230",
+    "holdPiece@L235",
+    "lock@L244",
+    "gravityStep@L255",
+    "ghostCells@L263",
+    "togglePause@L276",
+    "input@L290",
+    "render@L307",
+    "renderNext@L338",
+    "renderHold@L349",
+    "miniGrid@L356",
+    "stopTimer@L372",
+    "startTimer@L377",
+    "newGame@L385"
+   ],
+   "testids": [
+    "board",
+    "score",
+    "level",
+    "lines",
+    "next-piece",
+    "hold-piece",
+    "pause-btn",
+    "restart-btn",
+    "paused-indicator",
+    "game-over"
+   ]
+  }
+ ],
+ "requirements": [
+  {
+   "id": "REQ-001",
+   "status": "partial",
+   "title": "Build Tetris game in single HTML file"
+  },
+  {
+   "id": "REQ-002",
+   "status": "done",
+   "title": "Add rotation, and settle how a piece locks"
+  },
+  {
+   "id": "REQ-003",
+   "status": "done",
+   "title": "Add line clears and scoring"
+  },
+  {
+   "id": "REQ-004",
+   "status": "done",
+   "title": "Next-piece preview and game over"
+  },
+  {
+   "id": "REQ-005",
+   "status": "done",
+   "title": "Fix down key breathing room"
+  },
+  {
+   "id": "REQ-006",
+   "status": "done",
+   "title": "Show only next piece in preview"
+  },
+  {
+   "id": "REQ-007",
+   "status": "done",
+   "title": "Levels, speed, and hold feature"
+  },
+  {
+   "id": "REQ-008",
+   "status": "open",
+   "title": "Bug report from a player:"
+  },
+  {
+   "id": "REQ-009",
+   "status": "done",
+   "title": "Ghost piece and pause feature"
+  },
+  {
+   "id": "REQ-010",
+   "status": "done",
+   "title": "Final pass: keyboard controls and restart button"
+  }
+ ],
+ "unverified": [
+  "REQ-001",
+  "REQ-002",
+  "REQ-003",
+  "REQ-004",
+  "REQ-005",
+  "REQ-006",
+  "REQ-007",
+  "REQ-009",
+  "REQ-010"
+ ],
+ "unsatisfied": [
+  "REQ-008"
+ ]
+}

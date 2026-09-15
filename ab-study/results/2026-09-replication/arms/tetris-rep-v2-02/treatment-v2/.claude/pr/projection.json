@@ -1,0 +1,112 @@
+{
+ "ts": "2026-09-13T01:40:05Z",
+ "source_map": [
+  {
+   "file": "index.html",
+   "lines": 592,
+   "functions": [
+    "buildDom@L147",
+    "emptyBoard@L189",
+    "isType@L199",
+    "randomBag@L202",
+    "fillUpcoming@L211",
+    "cellsOf@L215",
+    "fits@L219",
+    "spawn@L230",
+    "spawnType@L239",
+    "clearLines@L258",
+    "lockPiece@L282",
+    "holdPiece@L293",
+    "gravityStep@L305",
+    "resetLock@L318",
+    "shift@L326",
+    "rotateCW@L334",
+    "doInput@L351",
+    "gravityInterval@L380",
+    "stopTimer@L384",
+    "startTimer@L389",
+    "togglePause@L406",
+    "ghostCells@L418",
+    "render@L427",
+    "newGame@L479"
+   ],
+   "testids": [
+    "board",
+    "score",
+    "level",
+    "lines",
+    "hold-piece",
+    "next-piece",
+    "game-over",
+    "paused-indicator",
+    "pause-btn",
+    "restart-btn"
+   ]
+  }
+ ],
+ "requirements": [
+  {
+   "id": "REQ-001",
+   "status": "partial",
+   "title": "Build Tetris game in single HTML file"
+  },
+  {
+   "id": "REQ-002",
+   "status": "open",
+   "title": "Add rotation, and settle how a piece locks."
+  },
+  {
+   "id": "REQ-003",
+   "status": "done",
+   "title": "Line clears and scoring"
+  },
+  {
+   "id": "REQ-004",
+   "status": "done",
+   "title": "Next-piece preview and game-over state"
+  },
+  {
+   "id": "REQ-005",
+   "status": "partial",
+   "title": "Soft drop on resting piece buys breathing room"
+  },
+  {
+   "id": "REQ-006",
+   "status": "done",
+   "title": "Show only the next piece in preview"
+  },
+  {
+   "id": "REQ-007",
+   "status": "done",
+   "title": "Levels and hold"
+  },
+  {
+   "id": "REQ-008",
+   "status": "open",
+   "title": "Bug report from a player:"
+  },
+  {
+   "id": "REQ-009",
+   "status": "done",
+   "title": "Ghost piece and pause feature"
+  },
+  {
+   "id": "REQ-010",
+   "status": "done",
+   "title": "Final pass: keyboard controls and restart button"
+  }
+ ],
+ "unverified": [
+  "REQ-001",
+  "REQ-002",
+  "REQ-004",
+  "REQ-005",
+  "REQ-006",
+  "REQ-007",
+  "REQ-009",
+  "REQ-010"
+ ],
+ "unsatisfied": [
+  "REQ-008"
+ ]
+}

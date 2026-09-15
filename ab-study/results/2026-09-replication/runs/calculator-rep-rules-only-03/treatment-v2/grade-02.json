@@ -1,0 +1,77 @@
+{
+ "batch": 2,
+ "armDir": "/Users/vmysla/src/ab-study/arms/calculator-rep-rules-only-03/treatment-v2",
+ "total": 9,
+ "passed": 9,
+ "byTag": {
+  "core": {
+   "total": 9,
+   "passed": 9
+  }
+ },
+ "results": [
+  {
+   "id": "b1-entry",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-one-decimal",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-add",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-four-ops",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-clear",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-single-file",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b2-running-result",
+   "batch": 2,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b2-chain-immediate",
+   "batch": 2,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b2-long-chain",
+   "batch": 2,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  }
+ ]
+}

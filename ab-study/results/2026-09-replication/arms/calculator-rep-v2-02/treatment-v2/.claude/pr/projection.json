@@ -1,0 +1,131 @@
+{
+ "ts": "2026-09-13T05:27:15Z",
+ "source_map": [
+  {
+   "file": "index.html",
+   "lines": 512,
+   "functions": [
+    "formatNumber@L191",
+    "compute@L205",
+    "render@L217",
+    "setResult@L231",
+    "inputDigit@L250",
+    "inputDot@L266",
+    "toggleSign@L280",
+    "setOperand@L294",
+    "inputOperator@L304",
+    "openGroup@L323",
+    "closeGroup@L338",
+    "equals@L356",
+    "operandText@L373",
+    "addTapeRow@L380",
+    "memoryAdd@L401",
+    "memoryRecall@L411",
+    "memoryClear@L418",
+    "applyFunction@L432",
+    "wrapOperand@L443",
+    "toggleScientific@L448",
+    "clearAll@L455"
+   ],
+   "testids": [
+    "tape-clear",
+    "calc-tape",
+    "mem-indicator",
+    "key-sci",
+    "calc-display",
+    "key-sqrt",
+    "key-square",
+    "key-recip",
+    "key-mc",
+    "key-mr",
+    "key-mplus",
+    "key-lparen",
+    "key-rparen",
+    "key-clear",
+    "key-sign",
+    "key-div",
+    "key-7",
+    "key-8",
+    "key-9",
+    "key-mul",
+    "key-4",
+    "key-5",
+    "key-6",
+    "key-sub",
+    "key-1",
+    "key-2",
+    "key-3",
+    "key-add",
+    "key-0",
+    "key-dot",
+    "key-equals"
+   ]
+  }
+ ],
+ "requirements": [
+  {
+   "id": "REQ-001",
+   "status": "done",
+   "title": "Build a single-file calculator"
+  },
+  {
+   "id": "REQ-002",
+   "status": "done",
+   "title": "Add chained calculations"
+  },
+  {
+   "id": "REQ-003",
+   "status": "done",
+   "title": "Number display formatting and division by zero"
+  },
+  {
+   "id": "REQ-004",
+   "status": "done",
+   "title": "Add two single-key operations"
+  },
+  {
+   "id": "REQ-005",
+   "status": "done",
+   "title": "Add parentheses for grouping calculations"
+  },
+  {
+   "id": "REQ-006",
+   "status": "done",
+   "title": "Remove percent key from calculator"
+  },
+  {
+   "id": "REQ-007",
+   "status": "done",
+   "title": "Running tape of past calculations"
+  },
+  {
+   "id": "REQ-008",
+   "status": "open",
+   "title": "Bug report from a user:"
+  },
+  {
+   "id": "REQ-009",
+   "status": "done",
+   "title": "Add memory keys"
+  },
+  {
+   "id": "REQ-010",
+   "status": "done",
+   "title": "Final pass: keyboard entry and scientific panel"
+  }
+ ],
+ "unverified": [
+  "REQ-001",
+  "REQ-002",
+  "REQ-003",
+  "REQ-004",
+  "REQ-005",
+  "REQ-006",
+  "REQ-007",
+  "REQ-009",
+  "REQ-010"
+ ],
+ "unsatisfied": [
+  "REQ-008"
+ ]
+}

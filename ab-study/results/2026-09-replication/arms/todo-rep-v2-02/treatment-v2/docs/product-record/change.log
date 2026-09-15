@@ -1,0 +1,13 @@
+# Change log
+_Regenerated from the journal by product-record hooks. Newest first._
+
+2026-09-13T19:57:42Z  30e4f77e  REQ-010  | I added the shortcuts, and a browser test in headless Chromium passed all 22 checks. Earlier failures were a bug in my test script, not in the app. The test cov... | 1 file changed, 17 insertions(+), 1 deletion(-) [index.html]
+2026-09-13T19:55:27Z  b7979172  REQ-009  | I added both buttons below the list. The script's syntax checks out, but I haven't tested it in a browser. Both buttons act on every todo, not only the ones the... | 1 file changed, 27 insertions(+) [index.html]
+2026-09-13T19:54:47Z  a425f1ad  REQ-008  | I couldn't reproduce this, so I changed nothing. The code already follows DEC-004: due dates are stored as local `YYYY-MM-DD` text and compared to the local dat... | no diff
+2026-09-13T19:54:00Z  a17175d9  REQ-007  | I added both features to `index.html`. The script's syntax checks out, but I haven't tested it in a browser. - **Editing:** double-click a todo's text to get an... | 1 file changed, 57 insertions(+), 2 deletions(-) [index.html]
+2026-09-13T19:52:59Z  4c19c8ab  REQ-006  | I removed the priority colours. Each todo now shows its priority as a plain grey label (HIGH, MED, LOW), the same for all three. I haven't checked it in a brows... | 1 file changed, 2 insertions(+), 8 deletions(-) [index.html]
+2026-09-13T19:52:19Z  d75c8afb  REQ-005  | I sorted todos high, then med, then low, keeping the order they were added within each priority. I haven't tested it in a browser. DEC-003 still applies: all ac... | 1 file changed, 10 insertions(+), 4 deletions(-) [index.html]
+2026-09-13T19:51:37Z  200d0cd4  REQ-004  | I added priorities: a `todo-priority` select (default `med`), `data-priority` on each `todo-item`, and a coloured left stripe plus a small label on each row. Th... | 1 file changed, 33 insertions(+), 5 deletions(-) [index.html]
+2026-09-13T19:50:42Z  5eb3b067  REQ-003  | I added an optional due date to todos. The script's syntax checks out, but I haven't tested it in a browser. A todo is overdue only if its date string is earlie... | 1 file changed, 45 insertions(+), 6 deletions(-) [index.html]
+2026-09-13T19:49:43Z  7374011c  REQ-002  | I added a completion checkbox to each todo and All / Active / Completed filter buttons, with All selected on load. Completed todos sort below active ones, and e... | 1 file changed, 58 insertions(+), 4 deletions(-) [index.html]
+2026-09-13T19:48:45Z  1e7bee29  REQ-001  | I built the todo app as a single `index.html`. It uses a form, so clicking Add or pressing Enter adds a todo. Blank entries are ignored. Each todo is saved as `... | no diff [index.html (new)]

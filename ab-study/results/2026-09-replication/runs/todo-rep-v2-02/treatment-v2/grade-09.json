@@ -1,0 +1,184 @@
+{
+ "batch": 9,
+ "armDir": "/Users/vmysla/src/product-tracebility-ab-testing/ab-study/arms/todo-rep-v2-02/treatment-v2",
+ "total": 22,
+ "passed": 22,
+ "byTag": {
+  "core": {
+   "total": 15,
+   "passed": 15
+  },
+  "conflict": {
+   "total": 2,
+   "passed": 2
+  },
+  "reversal": {
+   "total": 2,
+   "passed": 2
+  },
+  "bugfix": {
+   "total": 2,
+   "passed": 2
+  },
+  "implicit": {
+   "total": 1,
+   "passed": 1
+  }
+ },
+ "results": [
+  {
+   "id": "b1-add",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-multiple",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-delete",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-persist",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-single-file",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b2-toggle",
+   "batch": 2,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b2-filters",
+   "batch": 2,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b2-completed-last",
+   "batch": 2,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b3-overdue-past",
+   "batch": 3,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b3-overdue-future",
+   "batch": 3,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b4-priority-attr",
+   "batch": 4,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b5-priority-sort",
+   "batch": 5,
+   "tag": "conflict",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b5-conflict-completed-still-last",
+   "batch": 5,
+   "tag": "conflict",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b6-colour-removed",
+   "batch": 6,
+   "tag": "reversal",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b6-priority-kept",
+   "batch": 6,
+   "tag": "reversal",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b7-search",
+   "batch": 7,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b7-search-with-filter",
+   "batch": 7,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b8-due-today-not-overdue-evening",
+   "batch": 8,
+   "tag": "bugfix",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b8-yesterday-still-overdue",
+   "batch": 8,
+   "tag": "bugfix",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b9-clear-completed",
+   "batch": 9,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b9-mark-all",
+   "batch": 9,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b9-implicit-ordering-preserved",
+   "batch": 9,
+   "tag": "implicit",
+   "pass": true,
+   "error": null
+  }
+ ]
+}

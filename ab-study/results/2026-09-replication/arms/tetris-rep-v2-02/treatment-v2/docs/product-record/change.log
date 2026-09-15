@@ -1,0 +1,13 @@
+# Change log
+_Regenerated from the journal by product-record hooks. Newest first._
+
+2026-09-13T01:39:49Z  28d36dec  REQ-010  | I added the R key and `restart-btn`. The other keys were already there. I found nothing broken in earlier features. - **Controls:** R starts a new game, even wh... | 1 file changed, 13 insertions(+), 4 deletions(-) [index.html]
+2026-09-13T01:38:38Z  a266de60  REQ-009  | I added the ghost piece and pause, but haven't tried them in a browser. When a game resumes, the piece's lock count, its 3 restarts and the time left before the... | 1 file changed, 64 insertions(+), 8 deletions(-) [index.html]
+2026-09-13T01:37:21Z  ff8c6751  REQ-008  | I couldn't reproduce this, so I didn't change any code. - **Scores at level 5:** one four-row clear scores 800 × 5 = 4,000. Two two-row clears score 2 × 300 × 5... | no diff
+2026-09-13T01:36:39Z  af8c2f44  REQ-007  | I added levels and hold. The level now rises by one for every 10 lines crossed, counted from the current level, so `setLevel` carries on from where you set it. ... | 1 file changed, 66 insertions(+), 10 deletions(-) [index.html]
+2026-09-13T01:35:35Z  147c473f  REQ-006  | I set the preview to show only the next piece, in its colour, using the same 4x2 grid as before (DEC-005). I haven't checked it in a browser. `__tetris.getState... | 1 file changed, 5 insertions(+), 3 deletions(-) [index.html]
+2026-09-13T01:35:09Z  27c0c2a4  REQ-005  | I made soft drop on a resting piece restart the lock delay. It uses the same limit of 3 restarts per piece as sideways moves, and it scores no points (DEC-004).... | 1 file changed, 14 insertions(+), 5 deletions(-) [index.html]
+2026-09-13T01:34:29Z  d9d705ac  REQ-004  | I added both features to `index.html`. I only checked that the script parses. I haven't run the game in a browser. - **Preview:** it shows three `next-piece-ite... | 1 file changed, 38 insertions(+), 19 deletions(-) [index.html]
+2026-09-13T01:33:21Z  f6ba0052  REQ-003  | I added soft and hard drop points to `index.html`. Line clears were already built: full rows are removed, the rows above drop down, and `lines` counts them and ... | 1 file changed, 14 insertions(+), 2 deletions(-) [index.html, check/line-scores.mjs (new)]
+2026-09-13T01:32:25Z  18050a21  REQ-002  | I added `"rotateCW"` (↑ key) and the new locking rule; I only checked that the script parses, never ran the game. Rotation turns the piece in its own box. If th... | 1 file changed, 52 insertions(+), 9 deletions(-) [index.html]
+2026-09-13T01:30:53Z  b937b736  REQ-001  | I built `index.html` as a single file with DOM cells and a `window.__tetris` API that runs the same `gravityStep` as the real timer. I only checked that the scr... | no diff [index.html (new)]

@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tetris</title>
+<style>
+  :root {
+    --cell: min(4vh, 7vw, 32px);
+    --bg: #14161c;
+    --panel: #1d2029;
+    --grid: #262a35;
+    --text: #e8eaf0;
+    --muted: #8a90a0;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .game { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+  .board {
+    display: grid;
+    grid-template-columns: repeat(10, var(--cell));
+    grid-template-rows: repeat(20, var(--cell));
+    gap: 1px;
+    padding: 1px;
+    background: var(--grid);
+    border: 2px solid #3a3f4d;
+    border-radius: 4px;
+    position: relative;
+  }
+  .cell { background: var(--bg); }
+  .cell.ghost { box-shadow: inset 0 0 0 2px rgba(232, 234, 240, .35); }
+  .panel { display: flex; flex-direction: column; gap: 12px; min-width: 140px; }
+  .box { background: var(--panel); border-radius: 6px; padding: 10px 14px; }
+  .label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .value { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .preview { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+  .preview-item {
+    display: grid;
+    grid-template-columns: repeat(4, 18px);
+    grid-template-rows: repeat(2, 18px);
+    gap: 1px;
+  }
+  .preview-item div { background: transparent; }
+  .hold-used { opacity: .4; }
+  .help { font-size: 13px; color: var(--muted); }
+  .help b { color: var(--text); font-weight: 600; }
+  button {
+    font: inherit;
+    background: #3a3f4d;
+    color: var(--text);
+    border: 0;
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+  button:hover { background: #4a5061; }
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10, 11, 15, .72);
+    font-size: 24px;
+    font-weight: 700;
+  }
+
+  .p-I { background-color: #36c5e8 !important; }
+  .p-O { background-color: #f2d031 !important; }
+  .p-T { background-color: #a453e0 !important; }
+  .p-S { background-color: #4ccf5a !important; }
+  .p-Z { background-color: #e8483f !important; }
+  .p-J { background-color: #3d6ff0 !important; }
+  .p-L { background-color: #f08c2e !important; }
+</style>
+</head>
+<body>
+<div class="game">
+  <div class="board" data-testid="board" id="board">
+    <div class="overlay" data-testid="game-over" id="overlay" hidden>Game over</div>
+    <div class="overlay" data-testid="paused-indicator" id="pausedOverlay" hidden>Paused</div>
+  </div>
+  <div class="panel">
+    <div class="box"><div class="label">Score</div><div class="value" data-testid="score" id="score">0</div></div>
+    <div class="box"><div class="label">Level</div><div class="value" data-testid="level" id="level">1</div></div>
+    <div class="box"><div class="label">Lines</div><div class="value" data-testid="lines" id="lines">0</div></div>
+    <div class="box"><div class="label">Hold</div><div class="preview" id="holdBox"><div class="preview-item" data-testid="hold-piece" id="hold" data-piece=""></div></div></div>
+    <div class="box"><div class="label">Next</div><div class="preview" data-testid="next-piece" id="preview"></div></div>
+    <div class="box help">
+      <div><b>← →</b> move</div>
+      <div><b>↑</b> rotate</div>
+      <div><b>↓</b> soft drop</div>
+      <div><b>Space</b> hard drop</div>
+      <div><b>C</b> hold</div>
+      <div><b>P</b> pause</div>
+      <div><b>R</b> new game</div>
+    </div>
+    <button type="button" data-testid="pause-btn" id="pauseBtn">Pause</button>
+    <button type="button" data-testid="restart-btn" id="newGame">New game</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var ROWS = 20;
+  var COLS = 10;
+  var TYPES = ["I", "O", "T", "S", "Z", "J", "L"];
+
+  // Spawn orientation of each piece, as a square matrix.
+  var SHAPES = {
+    I: [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
+    O: [[1,1],[1,1]],
+    T: [[0,1,0],[1,1,1],[0,0,0]],
+    S: [[0,1,1],[1,1,0],[0,0,0]],
+    Z: [[1,1,0],[0,1,1],[0,0,0]],
+    J: [[1,0,0],[1,1,1],[0,0,0]],
+    L: [[0,0,1],[1,1,1],[0,0,0]]
+  };
+  // Where the matrix's top-left corner sits at spawn, so the piece's top row is board row 0.
+  var SPAWN = {
+    I: [-1, 3], O: [0, 4], T: [0, 3], S: [0, 3], Z: [0, 3], J: [0, 3], L: [0, 3]
+  };
+  // Points for clearing 1-4 rows at once, multiplied by the current level. Clearing rows
+  // together must always pay more than clearing the same rows one at a time; otherwise there
+  // is no reason to build a stack.
+  var LINE_SCORES = [0, 100, 300, 500, 800];
+  var SOFT_DROP_POINTS = 1; // per cell moved down by the player
+  var HARD_DROP_POINTS = 2; // per cell dropped
+  // Locking rule: a gravity step that cannot move the piece down counts one tick of lock
+  // delay; the piece locks on the LOCK_DELAY-th such tick. Moving left/right or pressing soft
+  // drop while resting restarts the delay; both share MAX_LOCK_RESETS per piece. Hard drop
+  // locks at once.
+  var LOCK_DELAY = 2;
+  var MAX_LOCK_RESETS = 3;
+
+  // Offsets for each rotation state: ROTATIONS[type][rot] = [[r, c], ...]
+  var ROTATIONS = {};
+  TYPES.forEach(function (t) {
+    var m = SHAPES[t];
+    var states = [];
+    for (var i = 0; i < 4; i++) {
+      var cells = [];
+      for (var r = 0; r < m.length; r++) {
+        for (var c = 0; c < m.length; c++) {
+          if (m[r][c]) cells.push([r, c]);
+        }
+      }
+      states.push(cells);
+      m = rotateClockwise(m);
+    }
+    ROTATIONS[t] = states;
+  });
+
+  function rotateClockwise(m) {
+    var n = m.length;
+    var out = [];
+    for (var r = 0; r < n; r++) {
+      out.push([]);
+      for (var c = 0; c < n; c++) out[r].push(m[n - 1 - c][r]);
+    }
+    return out;
+  }
+
+  // ---- State ----
+  var board;        // board[row][col] = piece letter or null (locked cells only)
+  var current;      // { type, rot, row, col, lockTicks, lockResets } or null
+  var upcoming;     // array of piece letters, soonest first
+  var held;         // letter of the held piece, or null
+  var canHold;      // false after a hold, until the next piece locks
+  var bag;          // 7-bag for the random generator
+  var score, level, lines, status; // status: "running", "paused" or "gameover"
+  var timer = null;       // pending gravity step, or null
+  var nextStepAt = 0;     // when the pending gravity step fires (ms timestamp)
+  var pausedRemaining = 0; // time left until the next gravity step, saved on pause
+
+  function emptyBoard() {
+    var b = [];
+    for (var r = 0; r < ROWS; r++) {
+      var row = [];
+      for (var c = 0; c < COLS; c++) row.push(null);
+      b.push(row);
+    }
+    return b;
+  }
+
+  function randomPiece() {
+    if (!bag || bag.length === 0) {
+      bag = TYPES.slice();
+      for (var i = bag.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = bag[i]; bag[i] = bag[j]; bag[j] = tmp;
+      }
+    }
+    return bag.pop();
+  }
+
+  function cleanQueue(queue) {
+    if (!Array.isArray(queue)) return [];
+    return queue
+      .map(function (p) { return String(p).toUpperCase(); })
+      .filter(function (p) { return TYPES.indexOf(p) !== -1; });
+  }
+
+  var PREVIEW_COUNT = 1;
+
+  // Keep enough upcoming pieces to fill the preview.
+  function fillUpcoming() {
+    while (upcoming.length < PREVIEW_COUNT) upcoming.push(randomPiece());
+  }
+
+  function pieceCells(p, rot, row, col) {
+    return ROTATIONS[p.type][rot].map(function (o) { return [row + o[0], col + o[1]]; });
+  }
+
+  function fits(p, rot, row, col) {
+    var cells = pieceCells(p, rot, row, col);
+    for (var i = 0; i < cells.length; i++) {
+      var r = cells[i][0], c = cells[i][1];
+      if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return false;
+      if (board[r][c]) return false;
+    }
+    return true;
+  }
+
+  function spawn() {
+    fillUpcoming();
+    var type = upcoming.shift();
+    fillUpcoming();
+    enter(type);
+  }
+
+  // Puts a piece of the given type at its spawn position. Ends the game if it does not fit.
+  function enter(type) {
+    var p = { type: type, rot: 0, row: SPAWN[type][0], col: SPAWN[type][1], lockTicks: 0, lockResets: 0 };
+    if (!fits(p, p.rot, p.row, p.col)) {
+      current = null;
+      status = "gameover";
+      stopTimer();
+      return;
+    }
+    current = p;
+  }
+
+  // Sets the falling piece aside. With the slot empty the next piece comes in; otherwise the
+  // held piece comes back. Allowed once per piece, until a piece locks.
+  function hold() {
+    if (!canHold) return;
+    var type = current.type;
+    current = null;
+    canHold = false;
+    if (held) {
+      var back = held;
+      held = type;
+      enter(back);
+    } else {
+      held = type;
+      spawn();
+    }
+  }
+
+  // Cells where the falling piece would land if dropped straight down.
+  function ghostCells() {
+    if (!current) return [];
+    var row = current.row;
+    while (fits(current, current.rot, row + 1, current.col)) row++;
+    return pieceCells(current, current.rot, row, current.col);
+  }
+
+  function tryMove(dr, dc) {
+    if (!current) return false;
+    if (!fits(current, current.rot, current.row + dr, current.col + dc)) return false;
+    current.row += dr;
+    current.col += dc;
+    if (dr > 0) current.lockTicks = 0;
+    return true;
+  }
+
+  function isResting() {
+    return !fits(current, current.rot, current.row + 1, current.col);
+  }
+
+  // Restarts the lock delay of a resting piece, at most MAX_LOCK_RESETS times per piece.
+  function restartLockDelay() {
+    if (current.lockResets < MAX_LOCK_RESETS) {
+      current.lockResets++;
+      current.lockTicks = 0;
+    }
+  }
+
+  // Sideways move. If the piece was resting, this restarts its lock delay.
+  function tryShift(dc) {
+    if (!current) return false;
+    var resting = isResting();
+    if (!tryMove(0, dc)) return false;
+    if (resting) restartLockDelay();
+    return true;
+  }
+
+  // Soft drop. Moves down one cell for points; on a resting piece it restarts the lock delay
+  // instead, the same as a sideways move. It spends a reset only once the delay has started,
+  // so a held down key does not burn the budget the moment the piece lands.
+  function softDrop() {
+    if (tryMove(1, 0)) score += SOFT_DROP_POINTS;
+    else if (current.lockTicks > 0) restartLockDelay();
+  }
+
+  // Clockwise rotation. If the rotated shape does not fit in place, try sideways shifts only
+  // (a vertical kick would let a resting piece climb and stay in the air). If nothing fits,
+  // the piece is left untouched. A shape that would stick out above the board is pushed down
+  // into it, so a just-spawned I piece can stand upright.
+  function tryRotateCW() {
+    if (!current) return false;
+    var rot = (current.rot + 1) % 4;
+    var top = Math.min.apply(null, ROTATIONS[current.type][rot].map(function (o) { return o[0]; }));
+    var row = Math.max(current.row, -top);
+    var kicks = [0, -1, 1, -2, 2];
+    for (var i = 0; i < kicks.length; i++) {
+      var col = current.col + kicks[i];
+      if (fits(current, rot, row, col)) {
+        current.rot = rot;
+        current.row = row;
+        current.col = col;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function clearLines() {
+    var kept = board.filter(function (row) {
+      return row.some(function (cell) { return !cell; });
+    });
+    var cleared = ROWS - kept.length;
+    if (cleared === 0) return;
+    while (kept.length < ROWS) {
+      var row = [];
+      for (var c = 0; c < COLS; c++) row.push(null);
+      kept.unshift(row);
+    }
+    board = kept;
+    score += LINE_SCORES[cleared] * level;
+    // One level per 10-line boundary crossed, counted from the current level, so a level set
+    // by __tetris.setLevel carries on and the level never goes down.
+    var gained = Math.floor((lines + cleared) / 10) - Math.floor(lines / 10);
+    lines += cleared;
+    if (gained > 0) setLevel(level + gained);
+  }
+
+  function setLevel(n) {
+    level = n;
+    if (timer !== null) startTimer();
+  }
+
+  function lockPiece() {
+    pieceCells(current, current.rot, current.row, current.col).forEach(function (rc) {
+      board[rc[0]][rc[1]] = current.type;
+    });
+    current = null;
+    canHold = true;
+    clearLines();
+    spawn();
+  }
+
+  // One gravity step. The real timer and __tetris.tick both run this.
+  function gravityStep() {
+    if (status !== "running" || !current) return;
+    if (tryMove(1, 0)) return;
+    current.lockTicks++;
+    if (current.lockTicks >= LOCK_DELAY) lockPiece();
+  }
+
+  // Pausing freezes the piece and its lock delay as they are, including the time left until
+  // the next gravity step. Resuming waits only that remaining time, so pausing and resuming
+  // never buys a resting piece extra time before it locks.
+  function togglePause() {
+    if (status === "running") {
+      pausedRemaining = Math.max(0, nextStepAt - Date.now());
+      stopTimer();
+      status = "paused";
+    } else if (status === "paused") {
+      status = "running";
+      scheduleStep(Math.min(pausedRemaining, gravityInterval()));
+    }
+  }
+
+  function performAction(action) {
+    if (action === "pause") return togglePause();
+    if (status !== "running" || !current) return;
+    switch (action) {
+      case "left": tryShift(-1); break;
+      case "right": tryShift(1); break;
+      case "softDrop": softDrop(); break;
+      case "hardDrop":
+        while (tryMove(1, 0)) score += HARD_DROP_POINTS;
+        lockPiece();
+        break;
+      case "rotateCW":
+      case "rotate": tryRotateCW(); break;
+      case "hold": hold(); break;
+    }
+  }
+
+  // ---- Timer ----
+  function gravityInterval() {
+    return Math.max(100, 1000 - (level - 1) * 100);
+  }
+
+  function scheduleStep(delay) {
+    stopTimer();
+    nextStepAt = Date.now() + delay;
+    timer = setTimeout(function () {
+      timer = null;
+      gravityStep();
+      render();
+      if (status === "running" && timer === null) scheduleStep(gravityInterval());
+    }, delay);
+  }
+
+  function startTimer() {
+    scheduleStep(gravityInterval());
+  }
+
+  function stopTimer() {
+    if (timer !== null) {
+      clearTimeout(timer);
+      timer = null;
+    }
+  }
+
+  function newGame(queue) {
+    board = emptyBoard();
+    bag = [];
+    upcoming = cleanQueue(queue);
+    score = 0;
+    level = 1;
+    lines = 0;
+    held = null;
+    canHold = true;
+    status = "running";
+    current = null;
+    spawn();
+    if (status === "running") startTimer();
+  }
+
+  // ---- Rendering (synchronous) ----
+  var boardEl = document.getElementById("board");
+  var overlayEl = document.getElementById("overlay");
+  var pausedEl = document.getElementById("pausedOverlay");
+  var pauseBtn = document.getElementById("pauseBtn");
+  var scoreEl = document.getElementById("score");
+  var levelEl = document.getElementById("level");
+  var linesEl = document.getElementById("lines");
+  var previewEl = document.getElementById("preview");
+  var holdEl = document.getElementById("hold");
+  var cellEls = [];
+  var previewItems = []; // { el, cells: [8 divs] }, soonest first
+  var holdCells = [];
+
+  (function buildDom() {
+    for (var r = 0; r < ROWS; r++) {
+      cellEls.push([]);
+      for (var c = 0; c < COLS; c++) {
+        var el = document.createElement("div");
+        el.className = "cell";
+        el.setAttribute("data-testid", "cell");
+        el.setAttribute("data-row", String(r));
+        el.setAttribute("data-col", String(c));
+        el.setAttribute("data-filled", "false");
+        el.setAttribute("data-piece", "");
+        el.setAttribute("data-ghost", "false");
+        boardEl.insertBefore(el, overlayEl);
+        cellEls[r].push(el);
+      }
+    }
+    for (var i = 0; i < PREVIEW_COUNT; i++) {
+      var item = document.createElement("div");
+      item.className = "preview-item";
+      item.setAttribute("data-testid", "next-piece-item");
+      previewEl.appendChild(item);
+      previewItems.push({ el: item, cells: miniCells(item) });
+    }
+    holdCells = miniCells(holdEl);
+  })();
+
+  // Fills a 4x2 mini grid with cells and returns them.
+  function miniCells(item) {
+    var cells = [];
+    for (var k = 0; k < 8; k++) {
+      var cell = document.createElement("div");
+      item.appendChild(cell);
+      cells.push(cell);
+    }
+    return cells;
+  }
+
+  // Draws a piece's spawn orientation, trimmed to its occupied rows, into a 4x2 mini grid.
+  function drawMini(cells, type) {
+    cells.forEach(function (el) { paint(el, ""); });
+    if (!type) return;
+    var offsets = ROTATIONS[type][0];
+    var minRow = Math.min.apply(null, offsets.map(function (o) { return o[0]; }));
+    offsets.forEach(function (o) {
+      var el = cells[(o[0] - minRow) * 4 + o[1]];
+      if (el) paint(el, type);
+    });
+  }
+
+  function paint(el, type) {
+    var cls = el.className.replace(/\s*p-[IOTSZJL]\b/g, "");
+    el.className = type ? cls + " p-" + type : cls;
+  }
+
+  // Ghost cells as drawn: the landing cells not already covered by the falling piece.
+  function visibleGhost() {
+    if (!current) return [];
+    var own = pieceCells(current, current.rot, current.row, current.col).map(String);
+    return ghostCells().filter(function (rc) { return own.indexOf(String(rc)) === -1; });
+  }
+
+  function render() {
+    var drawn = board.map(function (row) { return row.slice(); });
+    if (current) {
+      pieceCells(current, current.rot, current.row, current.col).forEach(function (rc) {
+        drawn[rc[0]][rc[1]] = current.type;
+      });
+    }
+    var ghost = board.map(function (row) { return row.map(function () { return false; }); });
+    visibleGhost().forEach(function (rc) { ghost[rc[0]][rc[1]] = true; });
+    for (var r = 0; r < ROWS; r++) {
+      for (var c = 0; c < COLS; c++) {
+        var el = cellEls[r][c];
+        var type = drawn[r][c] || "";
+        var isGhost = ghost[r][c] ? "true" : "false";
+        if (el.getAttribute("data-ghost") !== isGhost) {
+          el.setAttribute("data-ghost", isGhost);
+          el.classList.toggle("ghost", ghost[r][c]);
+        }
+        if (el.getAttribute("data-piece") === type) continue;
+        el.setAttribute("data-piece", type);
+        el.setAttribute("data-filled", type ? "true" : "false");
+        paint(el, type);
+      }
+    }
+
+    scoreEl.textContent = String(score);
+    levelEl.textContent = String(level);
+    linesEl.textContent = String(lines);
+
+    previewItems.forEach(function (item, i) {
+      var nextType = upcoming[i] || "";
+      item.el.setAttribute("data-piece", nextType);
+      item.el.hidden = !nextType;
+      drawMini(item.cells, nextType);
+    });
+
+    holdEl.setAttribute("data-piece", held || "");
+    holdEl.classList.toggle("hold-used", !canHold);
+    drawMini(holdCells, held);
+
+    overlayEl.hidden = status !== "gameover";
+    pausedEl.hidden = status !== "paused";
+    pauseBtn.textContent = status === "paused" ? "Resume" : "Pause";
+    pauseBtn.disabled = status === "gameover";
+  }
+
+  // ---- Test control surface ----
+  window.__tetris = {
+    newGame: function (queue) {
+      newGame(queue);
+      render();
+    },
+    setQueue: function (queue) {
+      upcoming = cleanQueue(queue);
+      fillUpcoming();
+      render();
+    },
+    setBoard: function (rows) {
+      var b = emptyBoard();
+      for (var r = 0; r < ROWS; r++) {
+        var line = rows && rows[r] != null ? String(rows[r]) : "";
+        for (var c = 0; c < COLS; c++) {
+          var ch = line.charAt(c);
+          b[r][c] = TYPES.indexOf(ch) !== -1 ? ch : null;
+        }
+      }
+      board = b;
+      render();
+    },
+    setLevel: function (n) {
+      var lvl = Math.floor(Number(n));
+      if (!(lvl >= 1)) return;
+      setLevel(lvl);
+      render();
+    },
+    tick: function (n) {
+      var steps = n === undefined ? 1 : Math.max(0, Math.floor(Number(n)) || 0);
+      for (var i = 0; i < steps; i++) gravityStep();
+      render();
+    },
+    input: function (action) {
+      performAction(action);
+      render();
+    },
+    getBoard: function () {
+      return board.map(function (row) {
+        return row.map(function (cell) { return cell || "."; }).join("");
+      });
+    },
+    getState: function () {
+      return {
+        current: current
+          ? { type: current.type, cells: pieceCells(current, current.rot, current.row, current.col) }
+          : null,
+        next: upcoming.slice(),
+        score: score,
+        level: level,
+        lines: lines,
+        dropInterval: gravityInterval(),
+        hold: held,
+        ghost: visibleGhost(),
+        status: status
+      };
+    }
+  };
+
+  // ---- Player input ----
+  var KEYS = {
+    ArrowLeft: "left",
+    ArrowRight: "right",
+    ArrowDown: "softDrop",
+    ArrowUp: "rotateCW",
+    x: "rotateCW",
+    X: "rotateCW",
+    " ": "hardDrop",
+    c: "hold",
+    C: "hold",
+    Shift: "hold",
+    p: "pause",
+    P: "pause",
+    Escape: "pause",
+    r: "restart",
+    R: "restart"
+  };
+
+  document.addEventListener("keydown", function (e) {
+    // Leave browser shortcuts such as Ctrl+R and Cmd+C alone.
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    var action = KEYS[e.key];
+    if (!action) return;
+    e.preventDefault();
+    if ((action === "pause" || action === "restart") && e.repeat) return;
+    if (action === "restart") window.__tetris.newGame();
+    else window.__tetris.input(action);
+  });
+
+  pauseBtn.addEventListener("click", function (e) {
+    e.currentTarget.blur();
+    window.__tetris.input("pause");
+  });
+
+  document.getElementById("newGame").addEventListener("click", function (e) {
+    e.currentTarget.blur();
+    window.__tetris.newGame();
+  });
+
+  window.__tetris.newGame();
+})();
+</script>
+</body>
+</html>

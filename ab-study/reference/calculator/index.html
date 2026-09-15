@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculator</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; font: 14px/1.4 system-ui, -apple-system, Segoe UI, sans-serif;
+         background: #f4f5f7; color: #16181d; display: flex; justify-content: center;
+         padding: 24px 16px; }
+  .app { width: 100%; max-width: 700px; display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+  .calc { flex: 1 1 320px; min-width: 280px; background: #fff; border: 1px solid #dfe2e8;
+          border-radius: 10px; padding: 14px; }
+  .screen { background: #11141a; color: #f6f7f9; border-radius: 8px; padding: 12px 14px; }
+  .pending { min-height: 16px; font-size: 12px; opacity: .65; text-align: right; word-break: break-all; }
+  #display { font-size: 30px; text-align: right; word-break: break-all; }
+  #display[data-error="true"] { color: #ff7b72; }
+  .memrow { display: flex; justify-content: space-between; align-items: center;
+            font-size: 12px; padding: 6px 2px; color: #5a6172; }
+  #mem-indicator[data-active="true"] { color: #1a7f4b; font-weight: 700; }
+  .pad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  button { font: inherit; font-size: 16px; padding: 12px 0; border: 1px solid #d3d7df;
+           border-radius: 8px; background: #f8f9fb; cursor: pointer; }
+  button:hover { background: #eef0f5; }
+  .op { background: #e9effb; }
+  .eq { background: #2f6df6; color: #fff; border-color: #2f6df6; }
+  .util { background: #edeff3; }
+  .sci { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+  .sci[hidden] { display: none; }
+  .tape { flex: 1 1 240px; min-width: 220px; background: #fff; border: 1px solid #dfe2e8;
+          border-radius: 10px; padding: 14px; }
+  .tape h2 { font-size: 13px; margin: 0 0 8px; text-transform: uppercase; letter-spacing: .06em; color: #5a6172; }
+  #calc-tape { list-style: none; margin: 0 0 10px; padding: 0; max-height: 320px; overflow: auto; }
+  #calc-tape li { display: flex; justify-content: space-between; gap: 10px;
+                  border-bottom: 1px solid #eceef3; padding: 6px 0; }
+  .t-expr { color: #5a6172; word-break: break-all; }
+  .t-result { font-weight: 600; }
+  .empty { color: #8b92a1; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="calc">
+    <div class="screen">
+      <div class="pending" id="pending"></div>
+      <div id="display" data-testid="calc-display" data-value="0" data-error="false">0</div>
+    </div>
+    <div class="memrow">
+      <span data-testid="mem-indicator" id="mem-indicator" data-active="false">M</span>
+      <span>immediate execution &middot; no precedence</span>
+    </div>
+    <div class="pad">
+      <button class="util" data-testid="key-mc" data-k="mc">MC</button>
+      <button class="util" data-testid="key-mr" data-k="mr">MR</button>
+      <button class="util" data-testid="key-mplus" data-k="m+">M+</button>
+      <button class="util" data-testid="key-clear" data-k="clear">AC</button>
+
+      <button class="util" data-testid="key-lparen" data-k="(">(</button>
+      <button class="util" data-testid="key-rparen" data-k=")">)</button>
+      <button class="util" data-testid="key-sign" data-k="sign">&plusmn;</button>
+      <button class="op" data-testid="key-div" data-k="/">&divide;</button>
+
+      <button data-testid="key-7" data-k="7">7</button>
+      <button data-testid="key-8" data-k="8">8</button>
+      <button data-testid="key-9" data-k="9">9</button>
+      <button class="op" data-testid="key-mul" data-k="*">&times;</button>
+
+      <button data-testid="key-4" data-k="4">4</button>
+      <button data-testid="key-5" data-k="5">5</button>
+      <button data-testid="key-6" data-k="6">6</button>
+      <button class="op" data-testid="key-sub" data-k="-">&minus;</button>
+
+      <button data-testid="key-1" data-k="1">1</button>
+      <button data-testid="key-2" data-k="2">2</button>
+      <button data-testid="key-3" data-k="3">3</button>
+      <button class="op" data-testid="key-add" data-k="+">+</button>
+
+      <button class="util" data-testid="key-sci" data-k="sci">f(x)</button>
+      <button data-testid="key-0" data-k="0">0</button>
+      <button data-testid="key-dot" data-k=".">.</button>
+      <button class="eq" data-testid="key-equals" data-k="=">=</button>
+    </div>
+    <div class="sci" id="sci-panel" hidden>
+      <button data-testid="key-sqrt" data-k="sqrt">&radic;x</button>
+      <button data-testid="key-square" data-k="square">x&sup2;</button>
+      <button data-testid="key-recip" data-k="recip">1/x</button>
+    </div>
+  </section>
+
+  <section class="tape">
+    <h2>Tape</h2>
+    <ul id="calc-tape" data-testid="calc-tape"></ul>
+    <p class="empty" id="tape-empty">No calculations yet.</p>
+    <button class="util" data-testid="tape-clear" id="tape-clear">Clear tape</button>
+  </section>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---- state -------------------------------------------------------------
+  // entry: the digits being typed, or null when the display holds a computed value.
+  // value: the stored, never-rounded number the display renders through format().
+  var entry = null, value = 0, acc = 0, pendingOp = null;
+  var stack = [], tokens = [], tape = [], memory = 0, error = false, sciOpen = false;
+
+  var SYM = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+
+  // ---- presentation ------------------------------------------------------
+  // Rounding happens here and only here. Nothing upstream ever sees a rounded number.
+  function format(x) {
+    if (typeof x !== 'number' || !isFinite(x)) return 'Error';
+    if (x === 0) return '0';
+    var a = Math.abs(x), s, m, parts;
+    if (a >= 1e10 || a < 1e-9) {
+      parts = x.toExponential(9).split('e');
+      m = parts[0];
+      if (m.indexOf('.') >= 0) m = m.replace(/0+$/, '').replace(/\.$/, '');
+      return m + 'e' + parts[1];
+    }
+    var exp = Math.floor(Math.log10(a));
+    var dec = Math.min(100, Math.max(0, 9 - exp));
+    s = Number(x.toPrecision(10)).toFixed(dec);
+    if (s.indexOf('.') >= 0) s = s.replace(/0+$/, '').replace(/\.$/, '');
+    return s;
+  }
+
+  function current() { return entry !== null ? (parseFloat(entry) || 0) : value; }
+
+  function render() {
+    var d = document.getElementById('display');
+    d.setAttribute('data-error', error ? 'true' : 'false');
+    if (error) { d.textContent = 'Error'; d.setAttribute('data-value', '0'); }
+    else {
+      d.textContent = entry !== null ? entry : format(value);
+      d.setAttribute('data-value', String(current()));
+    }
+    document.getElementById('pending').textContent =
+      (stack.length ? '('.repeat(stack.length) + ' ' : '') + tokens.join(' ');
+    var mi = document.getElementById('mem-indicator');
+    mi.setAttribute('data-active', memory !== 0 ? 'true' : 'false');
+    mi.textContent = memory !== 0 ? 'M ' + format(memory) : 'M';
+
+    var ul = document.getElementById('calc-tape');
+    ul.textContent = '';
+    tape.forEach(function (row) {
+      var li = document.createElement('li');
+      li.setAttribute('data-testid', 'tape-row');
+      var e = document.createElement('span');
+      e.className = 't-expr'; e.setAttribute('data-testid', 'tape-expr');
+      e.textContent = row.expr;
+      var r = document.createElement('span');
+      r.className = 't-result'; r.setAttribute('data-testid', 'tape-result');
+      r.setAttribute('data-value', String(row.result));  // raw, like calc-display
+      r.textContent = format(row.result);   // formatted at render time, like the display
+      li.appendChild(e); li.appendChild(r); ul.appendChild(li);
+    });
+    document.getElementById('tape-empty').hidden = tape.length > 0;
+  }
+
+  // ---- engine ------------------------------------------------------------
+  function apply(a, op, b) {
+    if (op === '+') return a + b;
+    if (op === '-') return a - b;
+    if (op === '*') return a * b;
+    return a / b;
+  }
+
+  function settle(x) {                      // finish the waiting operation, if any
+    if (pendingOp === null) return x;
+    var r = apply(acc, pendingOp, x);
+    if (!isFinite(r)) { error = true; return 0; }
+    return r;
+  }
+
+  function flushOperand() {
+    if (entry !== null) tokens.push(entry);
+    else if (tokens.length === 0) tokens.push(format(value));
+  }
+
+  function digit(d) {
+    if (entry === null) entry = '';
+    if (entry === '0') entry = '';
+    entry += d;
+  }
+
+  function dot() {
+    if (entry === null) entry = '0';
+    if (entry.indexOf('.') < 0) entry += '.';
+  }
+
+  function operator(op) {
+    flushOperand();
+    var x = settle(current());
+    if (error) return;
+    acc = x; value = x; pendingOp = op; entry = null;
+    tokens.push(SYM[op]);
+  }
+
+  function lparen() {
+    if (entry !== null) tokens.push(entry);  // a stray typed operand is kept as typed
+    stack.push({ acc: acc, pendingOp: pendingOp });
+    acc = 0; pendingOp = null; value = 0; entry = null;
+    tokens.push('(');
+  }
+
+  function rparen() {
+    if (!stack.length) return;
+    flushOperand();
+    var x = settle(current());
+    if (error) return;
+    var frame = stack.pop();
+    acc = frame.acc; pendingOp = frame.pendingOp;
+    value = x; entry = null;                 // the group result behaves like a typed operand
+    tokens.push(')');
+  }
+
+  function equals() {
+    flushOperand();
+    while (stack.length) {                   // auto-close anything still open
+      var x0 = settle(current());
+      if (error) return;
+      var f = stack.pop();
+      acc = f.acc; pendingOp = f.pendingOp; value = x0; entry = null;
+      tokens.push(')');
+    }
+    var x = settle(current());
+    if (error) return;
+    var expr = tokens.join(' ');
+    acc = x; value = x; pendingOp = null; entry = null;
+    tokens = [];
+    tape.unshift({ expr: expr, result: x }); // newest first, no timestamp, raw result stored
+  }
+
+  function clearAll() {
+    entry = null; value = 0; acc = 0; pendingOp = null;
+    stack = []; tokens = []; error = false;
+  }
+
+  function sign() {
+    if (entry !== null) entry = entry.charAt(0) === '-' ? entry.slice(1) : '-' + entry;
+    else value = -value;
+  }
+
+  function unary(fn) {
+    var x = fn(current());
+    if (!isFinite(x) || isNaN(x)) { error = true; return; }
+    value = x; entry = null;
+  }
+
+  // ---- dispatch ----------------------------------------------------------
+  function handle(k) {
+    if (error && k !== 'clear') return;      // every key but clear is ignored in error
+    if (k >= '0' && k <= '9') digit(k);
+    else if (k === '.') dot();
+    else if (k === '+' || k === '-' || k === '*' || k === '/') operator(k);
+    else if (k === '=') equals();
+    else if (k === 'clear') clearAll();
+    else if (k === 'sign') sign();
+    else if (k === '(') lparen();
+    else if (k === ')') rparen();
+    else if (k === 'm+') memory += current();
+    else if (k === 'mr') { value = memory; entry = null; }   // stored value, rendered by format()
+    else if (k === 'mc') memory = 0;
+    else if (k === 'sqrt') unary(Math.sqrt);
+    else if (k === 'square') unary(function (x) { return x * x; });
+    else if (k === 'recip') unary(function (x) { return 1 / x; });
+    else if (k === 'sci') {
+      sciOpen = !sciOpen;
+      document.getElementById('sci-panel').hidden = !sciOpen;
+    }
+    render();
+  }
+
+  document.querySelectorAll('[data-k]').forEach(function (b) {
+    b.addEventListener('click', function () { handle(b.getAttribute('data-k')); });
+  });
+  document.getElementById('tape-clear').addEventListener('click', function () {
+    tape = []; render();                     // leaves the display alone
+  });
+
+  var KEYMAP = { 'Enter': '=', '=': '=', 'Escape': 'clear', '+': '+', '-': '-',
+                 '*': '*', '/': '/', '.': '.' };
+  document.addEventListener('keydown', function (e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    var k = (e.key >= '0' && e.key <= '9' && e.key.length === 1) ? e.key : KEYMAP[e.key];
+    if (!k) return;
+    e.preventDefault();
+    handle(k);
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Todos</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 48px 16px;
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: #1f2328;
+    background: #f6f7f9;
+  }
+  main {
+    max-width: 520px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid #e3e6ea;
+    border-radius: 12px;
+    padding: 24px;
+  }
+  h1 { margin: 0 0 16px; font-size: 24px; }
+  form { display: flex; flex-wrap: wrap; gap: 8px; }
+  form [data-testid="todo-input"] { flex-basis: 200px; }
+  .due-input { flex: none; }
+  select {
+    flex: none;
+    padding: 10px 12px;
+    font: inherit;
+    border: 1px solid #c9ced4;
+    border-radius: 8px;
+    background: #fff;
+  }
+  select:focus { outline: 2px solid #2f6feb; outline-offset: 1px; border-color: #2f6feb; }
+  .due { flex: none; font-size: 14px; color: #6a737d; white-space: nowrap; }
+  li[data-overdue="true"] .due { color: #b42318; font-weight: 600; }
+  input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 12px;
+    font: inherit;
+    border: 1px solid #c9ced4;
+    border-radius: 8px;
+  }
+  input:focus { outline: 2px solid #2f6feb; outline-offset: 1px; border-color: #2f6feb; }
+  button {
+    font: inherit;
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 8px;
+    background: #2f6feb;
+    color: #fff;
+    cursor: pointer;
+  }
+  button:hover { background: #255ecc; }
+  ul { list-style: none; margin: 16px 0 0; padding: 0; }
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 0;
+    border-top: 1px solid #eef0f2;
+  }
+  li:first-child { border-top: 0; }
+  .text { flex: 1; overflow-wrap: anywhere; }
+  li[data-completed="true"] .text { color: #6a737d; text-decoration: line-through; }
+  .toggle { flex: none; width: 18px; height: 18px; margin: 0; accent-color: #2f6feb; cursor: pointer; }
+  .filters { display: flex; flex-wrap: wrap; gap: 4px; margin: 16px 0 0; }
+  .filters button { background: transparent; color: #1f2328; padding: 6px 12px; border: 1px solid transparent; }
+  .filters button:hover { background: #eef0f2; }
+  .filters button[aria-pressed="true"] { border-color: #c9ced4; background: #f6f7f9; }
+  .delete { background: transparent; color: #b42318; padding: 6px 10px; }
+  .delete:hover { background: #fdecea; }
+  .empty { margin: 16px 0 0; color: #6a737d; }
+  .search { display: block; width: 100%; margin: 16px 0 0; }
+  .edit { padding: 4px 8px; }
+  .bulk { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0 0; }
+  .bulk button { background: transparent; color: #1f2328; padding: 6px 12px; border: 1px solid #c9ced4; }
+  .bulk button:hover { background: #eef0f2; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Todos</h1>
+  <form id="todo-form">
+    <input data-testid="todo-input" type="text" placeholder="What needs doing?" aria-label="New todo" autocomplete="off">
+    <input data-testid="todo-due" class="due-input" type="date" aria-label="Due date (optional)">
+    <select data-testid="todo-priority" aria-label="Priority">
+      <option value="low">Low</option>
+      <option value="med" selected>Medium</option>
+      <option value="high">High</option>
+    </select>
+    <button data-testid="todo-add" type="submit">Add</button>
+  </form>
+  <input data-testid="search-input" class="search" type="search" placeholder="Search todos" aria-label="Search todos" autocomplete="off">
+  <div class="filters" id="filters" role="group" aria-label="Show">
+    <button data-testid="filter-all" data-filter="all" type="button" aria-pressed="true">All</button>
+    <button data-testid="filter-active" data-filter="active" type="button" aria-pressed="false">Active</button>
+    <button data-testid="filter-completed" data-filter="completed" type="button" aria-pressed="false">Completed</button>
+  </div>
+  <div class="bulk" role="group" aria-label="Bulk actions">
+    <button data-testid="bulk-mark-all" id="bulk-mark-all" type="button">Mark all done</button>
+    <button data-testid="bulk-clear-completed" id="bulk-clear-completed" type="button">Clear completed</button>
+  </div>
+  <ul data-testid="todo-list" id="todo-list"></ul>
+  <p class="empty" id="empty">Nothing here yet. Add your first todo above.</p>
+</main>
+<script src="todos.js"></script>
+<script>
+  var STORAGE_KEY = 'todos';
+
+  function makeId() {
+    if (window.crypto && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+    return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+  }
+
+  function load() {
+    try {
+      var data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      return Array.isArray(data) ? data : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function save(todos) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+    } catch (e) {}
+  }
+
+  var todos = load();
+  var form = document.getElementById('todo-form');
+  var input = form.querySelector('[data-testid="todo-input"]');
+  var list = document.getElementById('todo-list');
+  var empty = document.getElementById('empty');
+  var dueInput = form.querySelector('[data-testid="todo-due"]');
+  var priorityInput = form.querySelector('[data-testid="todo-priority"]');
+  var filterButtons = document.querySelectorAll('#filters [data-filter]');
+  var filter = 'all';
+  var searchInput = document.querySelector('[data-testid="search-input"]');
+  var search = '';
+  var EMPTY_TEXT = {
+    none: 'Nothing here yet. Add your first todo above.',
+    active: 'All done. Nothing left to do.',
+    completed: 'Nothing completed yet.',
+    search: 'No todos match your search.'
+  };
+
+  Array.prototype.forEach.call(filterButtons, function (button) {
+    button.addEventListener('click', function () {
+      filter = button.dataset.filter;
+      render();
+    });
+  });
+
+  document.getElementById('bulk-mark-all').addEventListener('click', function () {
+    todos = markAllComplete(todos);
+    save(todos);
+    render();
+  });
+
+  document.getElementById('bulk-clear-completed').addEventListener('click', function () {
+    todos = clearCompleted(todos);
+    save(todos);
+    render();
+  });
+
+  searchInput.addEventListener('input', function () {
+    search = searchInput.value;
+    render();
+  });
+
+  // Enter in the todo input submits the form (the Add button is its submit
+  // button); Escape in an inline edit is handled in startEdit.
+  document.addEventListener('keydown', function (event) {
+    if (event.key !== '/' || event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return;
+    if (isTypingTarget(event.target)) return;
+    event.preventDefault();
+    searchInput.focus();
+    searchInput.select();
+  });
+
+  // Swaps a todo's text for a field. Enter or blur saves; Escape discards.
+  // An empty edit keeps the old text rather than deleting the todo.
+  function startEdit(text, todo) {
+    var field = document.createElement('input');
+    field.type = 'text';
+    field.className = 'edit';
+    field.setAttribute('data-testid', 'todo-edit');
+    field.setAttribute('aria-label', 'Edit "' + todo.text + '"');
+    field.value = todo.text;
+    var finished = false;
+
+    function finish(commit) {
+      if (finished) return;
+      finished = true;
+      var value = field.value.trim();
+      if (commit && value && value !== todo.text) {
+        todos = todos.map(function (t) {
+          return t.id === todo.id ? Object.assign({}, t, { text: value }) : t;
+        });
+        save(todos);
+      }
+      render();
+    }
+
+    field.addEventListener('keydown', function (event) {
+      if (event.isComposing) return;
+      if (event.key === 'Enter') { event.preventDefault(); finish(true); }
+      else if (event.key === 'Escape') { event.preventDefault(); finish(false); }
+    });
+    field.addEventListener('blur', function () { finish(true); });
+
+    text.replaceWith(field);
+    field.focus();
+    field.select();
+  }
+
+  // Shows a stored "YYYY-MM-DD" as a local date, built from its parts so no UTC shift applies.
+  function formatDue(due) {
+    var parts = due.split('-');
+    var date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function render() {
+    var today = localDateString(new Date());
+    Array.prototype.forEach.call(filterButtons, function (button) {
+      button.setAttribute('aria-pressed', String(button.dataset.filter === filter));
+    });
+
+    list.textContent = '';
+    var shown = visibleTodos(todos, filter, search);
+    shown.forEach(function (todo) {
+      var completed = !!todo.completed;
+      var li = document.createElement('li');
+      li.setAttribute('data-testid', 'todo-item');
+      li.setAttribute('data-completed', String(completed));
+      var overdue = isOverdue(todo.due, today);
+      li.setAttribute('data-overdue', String(overdue));
+      li.setAttribute('data-priority', normalizePriority(todo.priority));
+      li.dataset.id = todo.id;
+
+      var toggle = document.createElement('input');
+      toggle.type = 'checkbox';
+      toggle.className = 'toggle';
+      toggle.setAttribute('data-testid', 'todo-toggle');
+      toggle.setAttribute('aria-label', 'Mark "' + todo.text + '" as ' + (completed ? 'not done' : 'done'));
+      toggle.checked = completed;
+      toggle.addEventListener('change', function () {
+        todos = todos.map(function (t) {
+          return t.id === todo.id ? Object.assign({}, t, { completed: toggle.checked }) : t;
+        });
+        save(todos);
+        render();
+      });
+
+      var text = document.createElement('span');
+      text.className = 'text';
+      text.setAttribute('data-testid', 'todo-text');
+      text.textContent = todo.text;
+      text.addEventListener('dblclick', function () { startEdit(text, todo); });
+
+      var del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'delete';
+      del.setAttribute('data-testid', 'todo-delete');
+      del.setAttribute('aria-label', 'Delete "' + todo.text + '"');
+      del.textContent = 'Delete';
+      del.addEventListener('click', function () {
+        todos = todos.filter(function (t) { return t.id !== todo.id; });
+        save(todos);
+        render();
+      });
+
+      li.appendChild(toggle);
+      li.appendChild(text);
+      if (typeof todo.due === 'string' && DUE_PATTERN.test(todo.due)) {
+        var due = document.createElement('span');
+        due.className = 'due';
+        due.setAttribute('data-testid', 'todo-due-date');
+        due.textContent = (overdue ? 'Overdue · ' : 'Due ') + formatDue(todo.due);
+        li.appendChild(due);
+      }
+      li.appendChild(del);
+      list.appendChild(li);
+    });
+    empty.textContent = todos.length === 0 ? EMPTY_TEXT.none : search ? EMPTY_TEXT.search : (EMPTY_TEXT[filter] || '');
+    empty.hidden = shown.length > 0;
+  }
+
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    var value = input.value.trim();
+    if (!value) return;
+    var todo = { id: makeId(), text: value, createdAt: Date.now(), completed: false, priority: normalizePriority(priorityInput.value) };
+    if (DUE_PATTERN.test(dueInput.value)) todo.due = dueInput.value;
+    todos.push(todo);
+    save(todos);
+    input.value = '';
+    dueInput.value = '';
+    priorityInput.value = 'med';
+    input.focus();
+    render();
+  });
+
+  // Today may have changed while the tab was hidden (e.g. overnight).
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) render();
+  });
+
+  render();
+</script>
+</body>
+</html>

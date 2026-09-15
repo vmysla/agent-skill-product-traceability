@@ -1,0 +1,70 @@
+{
+ "batch": 2,
+ "armDir": "/Users/vmysla/src/product-tracebility-ab-testing/ab-study/arms/todo-rep-control-01/control",
+ "total": 8,
+ "passed": 8,
+ "byTag": {
+  "core": {
+   "total": 8,
+   "passed": 8
+  }
+ },
+ "results": [
+  {
+   "id": "b1-add",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-multiple",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-delete",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-persist",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-single-file",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b2-toggle",
+   "batch": 2,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b2-filters",
+   "batch": 2,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b2-completed-last",
+   "batch": 2,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  }
+ ]
+}

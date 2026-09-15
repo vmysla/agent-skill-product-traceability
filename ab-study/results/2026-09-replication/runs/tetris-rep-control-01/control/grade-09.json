@@ -1,0 +1,219 @@
+{
+ "batch": 9,
+ "armDir": "/Users/vmysla/src/ab-study/arms/tetris-rep-control-01/control",
+ "total": 27,
+ "passed": 27,
+ "byTag": {
+  "core": {
+   "total": 20,
+   "passed": 20
+  },
+  "conflict": {
+   "total": 2,
+   "passed": 2
+  },
+  "reversal": {
+   "total": 2,
+   "passed": 2
+  },
+  "bugfix": {
+   "total": 2,
+   "passed": 2
+  },
+  "implicit": {
+   "total": 1,
+   "passed": 1
+  }
+ },
+ "results": [
+  {
+   "id": "b1-single-file",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-initial-state",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-grid-matches-board",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-gravity-locks",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-move-and-hard-drop",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b2-rotate",
+   "batch": 2,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b2-lock-delay",
+   "batch": 2,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b2-lock-restart",
+   "batch": 2,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b2-lock-restart-cap",
+   "batch": 2,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b3-clear-single-double",
+   "batch": 3,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b3-clear-triple-quad",
+   "batch": 3,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b3-soft-drop-scores",
+   "batch": 3,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b3-hard-drop-scores",
+   "batch": 3,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b4-preview-colour",
+   "batch": 4,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b4-game-over",
+   "batch": 4,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b5-soft-drop-grace",
+   "batch": 5,
+   "tag": "conflict",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b5-conflict-cap-survives",
+   "batch": 5,
+   "tag": "conflict",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b6-preview-one",
+   "batch": 6,
+   "tag": "reversal",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b6-preview-colour-kept",
+   "batch": 6,
+   "tag": "reversal",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b7-level-up",
+   "batch": 7,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b7-speed-curve",
+   "batch": 7,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b7-hold",
+   "batch": 7,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b8-quad-beats-two-doubles",
+   "batch": 8,
+   "tag": "bugfix",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b8-quad-exact-at-level-5",
+   "batch": 8,
+   "tag": "bugfix",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b9-ghost",
+   "batch": 9,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b9-pause",
+   "batch": 9,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b9-implicit-pause-not-a-reset",
+   "batch": 9,
+   "tag": "implicit",
+   "pass": true,
+   "error": null
+  }
+ ]
+}

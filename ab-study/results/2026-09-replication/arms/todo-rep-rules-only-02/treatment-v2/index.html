@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Todos</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 2rem 1rem;
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: #f5f5f4;
+    color: #1c1917;
+  }
+  main { max-width: 32rem; margin: 0 auto; }
+  h1 { font-size: 1.5rem; margin: 0 0 1rem; }
+  form { display: flex; gap: 0.5rem; }
+  input {
+    flex: 1;
+    min-width: 0;
+    padding: 0.5rem 0.75rem;
+    font: inherit;
+    border: 1px solid #d6d3d1;
+    border-radius: 6px;
+  }
+  button {
+    padding: 0.5rem 1rem;
+    font: inherit;
+    border: 0;
+    border-radius: 6px;
+    background: #1c1917;
+    color: #fff;
+    cursor: pointer;
+  }
+  ul { list-style: none; margin: 1rem 0 0; padding: 0; }
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.5rem;
+    background: #fff;
+    border: 1px solid #e7e5e4;
+    border-radius: 6px;
+  }
+  li span { flex: 1; overflow-wrap: anywhere; }
+  li button { background: transparent; color: #b91c1c; padding: 0.25rem 0.5rem; }
+  li input[type="checkbox"] { flex: none; width: 1.1rem; height: 1.1rem; margin: 0; }
+  li[data-completed="true"] span { text-decoration: line-through; color: #78716c; }
+  form input[type="date"] { flex: none; }
+  .due { flex: none; font-size: 0.875rem; color: #57534e; }
+  li[data-overdue="true"] { border-color: #fca5a5; background: #fef2f2; }
+  li[data-overdue="true"] .due { color: #b91c1c; font-weight: 600; }
+  form select { flex: none; padding: 0.5rem; font: inherit; border: 1px solid #d6d3d1; border-radius: 6px; background: #fff; }
+  .filters { display: flex; gap: 0.5rem; margin-top: 1rem; }
+  .filters button { background: #e7e5e4; color: #1c1917; padding: 0.25rem 0.75rem; }
+  .filters button[aria-pressed="true"] { background: #1c1917; color: #fff; }
+  .search { display: block; width: 100%; margin-top: 1rem; }
+  li span[data-testid="todo-text"] { cursor: text; }
+  .bulk { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+  .bulk button { background: #e7e5e4; color: #1c1917; padding: 0.25rem 0.75rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Todos</h1>
+  <form id="add-form">
+    <input data-testid="todo-input" type="text" placeholder="What needs doing?" aria-label="New todo" autocomplete="off">
+    <input data-testid="todo-due" type="date" aria-label="Due date">
+    <select data-testid="todo-priority" aria-label="Priority">
+      <option value="low">Low</option>
+      <option value="med" selected>Med</option>
+      <option value="high">High</option>
+    </select>
+    <button data-testid="todo-add" type="submit">Add</button>
+  </form>
+  <input class="search" data-testid="search-input" type="search" placeholder="Search todos" aria-label="Search todos" autocomplete="off">
+  <div class="filters" role="group" aria-label="Filter todos">
+    <button data-testid="filter-all" data-filter="all" type="button" aria-pressed="true">All</button>
+    <button data-testid="filter-active" data-filter="active" type="button" aria-pressed="false">Active</button>
+    <button data-testid="filter-completed" data-filter="completed" type="button" aria-pressed="false">Completed</button>
+  </div>
+  <div class="bulk" role="group" aria-label="Bulk actions">
+    <button data-testid="bulk-mark-all" type="button">Mark all complete</button>
+    <button data-testid="bulk-clear-completed" type="button">Clear completed</button>
+  </div>
+  <ul data-testid="todo-list"></ul>
+</main>
+<script src="todo-logic.js"></script>
+<script>
+(function () {
+  var STORAGE_KEY = 'todos';
+  var form = document.getElementById('add-form');
+  var input = document.querySelector('[data-testid="todo-input"]');
+  var dueInput = document.querySelector('[data-testid="todo-due"]');
+  var priorityInput = document.querySelector('[data-testid="todo-priority"]');
+  var list = document.querySelector('[data-testid="todo-list"]');
+  var searchInput = document.querySelector('[data-testid="search-input"]');
+
+  function load() {
+    try {
+      var data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      return Array.isArray(data) ? data : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+    } catch (e) {}
+  }
+
+  function newId() {
+    if (window.crypto && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+  }
+
+  function render() {
+    renderedDay = TodoLogic.localToday();
+    list.textContent = '';
+    filterButtons.forEach(function (btn) {
+      btn.setAttribute('aria-pressed', String(btn.dataset.filter === filter));
+    });
+    TodoLogic.visibleTodos(todos, filter, searchInput.value).forEach(function (todo) {
+      var li = document.createElement('li');
+      li.setAttribute('data-testid', 'todo-item');
+      li.dataset.id = todo.id;
+      li.setAttribute('data-completed', String(!!todo.completed));
+      li.setAttribute('data-overdue', String(TodoLogic.isOverdue(todo, renderedDay)));
+      li.setAttribute('data-priority', TodoLogic.normalizePriority(todo.priority));
+
+      var toggle = document.createElement('input');
+      toggle.type = 'checkbox';
+      toggle.setAttribute('data-testid', 'todo-toggle');
+      toggle.setAttribute('aria-label', 'Mark complete');
+      toggle.checked = !!todo.completed;
+      toggle.addEventListener('change', function () {
+        todo.completed = toggle.checked;
+        save();
+        render();
+      });
+
+      var text = document.createElement('span');
+      text.setAttribute('data-testid', 'todo-text');
+      text.textContent = todo.text;
+      text.addEventListener('dblclick', function () {
+        var field = document.createElement('input');
+        field.type = 'text';
+        field.setAttribute('data-testid', 'todo-edit');
+        field.setAttribute('aria-label', 'Edit todo');
+        field.value = todo.text;
+        var finished = false;
+        // Empty text is not saved; the todo keeps its previous text.
+        function finish(commit) {
+          if (finished) return;
+          finished = true;
+          var value = field.value.trim();
+          if (commit && value && value !== todo.text) {
+            todo.text = value;
+            save();
+          }
+          render();
+        }
+        field.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter') { event.preventDefault(); finish(true); }
+          else if (event.key === 'Escape') { event.preventDefault(); finish(false); }
+        });
+        field.addEventListener('blur', function () { finish(true); });
+        li.replaceChild(field, text);
+        field.focus();
+        field.select();
+      });
+
+      var del = document.createElement('button');
+      del.type = 'button';
+      del.setAttribute('data-testid', 'todo-delete');
+      del.setAttribute('aria-label', 'Delete');
+      del.textContent = 'Delete';
+      del.addEventListener('click', function () {
+        todos = todos.filter(function (t) { return t.id !== todo.id; });
+        save();
+        render();
+      });
+
+      li.appendChild(toggle);
+      li.appendChild(text);
+      if (todo.due) {
+        var due = document.createElement('span');
+        due.className = 'due';
+        due.setAttribute('data-testid', 'todo-due-label');
+        due.textContent = 'Due ' + todo.due;
+        li.appendChild(due);
+      }
+      li.appendChild(del);
+      list.appendChild(li);
+    });
+  }
+
+  var todos = load();
+  var filter = 'all';
+  var renderedDay = '';
+  var filterButtons = Array.prototype.slice.call(document.querySelectorAll('[data-filter]'));
+
+  filterButtons.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      filter = btn.dataset.filter;
+      render();
+    });
+  });
+
+  searchInput.addEventListener('input', render);
+
+  // '/' focuses search, unless the user is typing in a field.
+  function isTypingField(el) {
+    if (!el) return false;
+    if (el.isContentEditable) return true;
+    var tag = el.tagName;
+    if (tag === 'TEXTAREA' || tag === 'SELECT') return true;
+    return tag === 'INPUT' && !/^(checkbox|radio|button|submit|reset)$/.test(el.type);
+  }
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key !== '/' || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return;
+    if (isTypingField(event.target)) return;
+    event.preventDefault();
+    searchInput.focus();
+    searchInput.select();
+  });
+
+  document.querySelector('[data-testid="bulk-mark-all"]').addEventListener('click', function () {
+    todos = TodoLogic.markAllComplete(todos);
+    save();
+    render();
+  });
+
+  document.querySelector('[data-testid="bulk-clear-completed"]').addEventListener('click', function () {
+    todos = TodoLogic.clearCompleted(todos);
+    save();
+    render();
+  });
+
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    var text = input.value.trim();
+    if (!text) return;
+    var todo = {
+      id: newId(), text: text, createdAt: Date.now(), completed: false,
+      priority: TodoLogic.normalizePriority(priorityInput.value)
+    };
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dueInput.value)) todo.due = dueInput.value;
+    todos.push(todo);
+    save();
+    render();
+    input.value = '';
+    dueInput.value = '';
+    priorityInput.value = 'med';
+    input.focus();
+  });
+
+  // Re-render when the local day changes so overdue flags stay current.
+  setInterval(function () {
+    if (TodoLogic.localToday() !== renderedDay) render();
+  }, 60000);
+
+  render();
+})();
+</script>
+</body>
+</html>

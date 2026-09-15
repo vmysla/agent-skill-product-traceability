@@ -1,0 +1,13 @@
+# Change log
+_Regenerated from the journal by product-record hooks. Newest first._
+
+2026-09-13T05:39:15Z  cc38d8ec  REQ-010  | I added the R key and a "New game" button (`restart-btn`). Both give an empty board, score 0, lines 0, level 1, and a running game. The other keys you listed al... | 1 file changed, 15 insertions(+), 3 deletions(-) [index.html]
+2026-09-13T05:37:55Z  9f4ed705  REQ-009  | I added the ghost piece and pause to `index.html`, marked `REQ-009`. The script parses, but I haven't played the game. - **Pause and the locking rule:** pausing... | 1 file changed, 62 insertions(+), 9 deletions(-) [index.html]
+2026-09-13T05:36:49Z  87a4b08b  REQ-008  | I couldn't reproduce this, so I changed nothing. At level 5 a four-row clear scores 4000 and a two-row clear scores 1500, so two of them make 3000. I tested it ... | no diff
+2026-09-13T05:35:27Z  1827633d  REQ-007  | I added levels, speed and hold to `index.html`. I only checked that the script parses; I haven't played it. - **Levels after `setLevel`:** you gain a level each... | 1 file changed, 65 insertions(+), 19 deletions(-) [index.html]
+2026-09-13T05:34:29Z  623dbbcf  REQ-006  | The preview panel now shows only the next piece, still in its colour. I haven't played it to check. The game still keeps 3 pieces queued behind the scenes, beca... | 1 file changed, 4 insertions(+), 3 deletions(-) [index.html]
+2026-09-13T05:33:59Z  550f2466  REQ-005  | I made pressing down on a piece that's resting on the stack reset its lock timer, the same way left and right do. It shares their limit of 3 resets per piece (D... | 1 file changed, 15 insertions(+), 5 deletions(-) [index.html]
+2026-09-13T05:33:19Z  cbec37cd  REQ-004  | I added the three-piece preview and game over to `index.html`. I only checked that the script parses; I haven't played it. - **Game over:** it happens when a ne... | 1 file changed, 25 insertions(+), 4 deletions(-) [index.html]
+2026-09-13T05:32:26Z  9f7b9b79  REQ-003  | I added line clears and scoring to `index.html`. The script passes a syntax check, but I haven't played the game or tested clears and scoring in a browser. - **... | 1 file changed, 22 insertions(+), 4 deletions(-) [index.html]
+2026-09-13T05:31:21Z  e7de615f  REQ-002  | I added clockwise rotation and the lock rules to `index.html`. I only checked that the script parses; I have not played it or run the new behaviour. - **Rotatio... | 1 file changed, 70 insertions(+), 14 deletions(-) [index.html]
+2026-09-13T05:28:57Z  d91923a3  REQ-001  | I built `index.html` in the repo root. It is one file with no dependencies. I only ran a syntax check on the script; I have not played it in a browser or run an... | no diff [index.html (new)]

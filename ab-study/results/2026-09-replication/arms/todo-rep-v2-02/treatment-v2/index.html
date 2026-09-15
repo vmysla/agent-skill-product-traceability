@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Todos</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 2rem 1rem; font: 16px/1.4 system-ui, sans-serif; background: #f6f6f4; color: #222; }
+  main { max-width: 32rem; margin: 0 auto; }
+  h1 { margin: 0 0 1rem; font-size: 1.5rem; }
+  form { display: flex; gap: .5rem; margin-bottom: 1rem; }
+  input { flex: 1; padding: .5rem .75rem; font: inherit; border: 1px solid #ccc; border-radius: 6px; }
+  button { padding: .5rem .9rem; font: inherit; border: 1px solid #bbb; border-radius: 6px; background: #fff; cursor: pointer; }
+  button:hover { background: #eee; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li { display: flex; align-items: center; gap: .5rem; padding: .5rem .75rem; margin-bottom: .4rem; background: #fff; border: 1px solid #e2e2e2; border-radius: 6px; }
+  li span { flex: 1; overflow-wrap: anywhere; }
+  li[data-completed="true"] span { text-decoration: line-through; color: #888; }
+  li input[type="checkbox"] { flex: none; width: 1.1rem; height: 1.1rem; margin: 0; }
+  .filters { display: flex; gap: .5rem; margin-bottom: 1rem; }
+  .filters button[aria-pressed="true"] { background: #222; border-color: #222; color: #fff; }
+  form input[type="date"] { flex: none; }
+  .due { flex: none; font-size: .85rem; color: #666; }
+  li[data-overdue="true"] { border-color: #d33; background: #fff1f0; }
+  li[data-overdue="true"] .due { color: #b00; font-weight: 600; }
+  form select { flex: none; padding: .5rem; font: inherit; border: 1px solid #ccc; border-radius: 6px; background: #fff; }
+  /* [REQ-006] Priority is shown as a neutral text label only; no per-priority colours, so the overdue highlight stays readable. */
+  /* [REQ-007] Search box and inline edit field. */
+  .search { display: block; width: 100%; margin-bottom: 1rem; }
+  li input.edit { padding: .2rem .4rem; }
+  /* [REQ-009] Bulk action bar below the list. */
+  .bulk { display: flex; gap: .5rem; margin-top: 1rem; }
+  .priority { flex: none; font-size: .75rem; font-weight: 600; text-transform: uppercase; padding: .1rem .4rem; border-radius: 4px; background: #ececec; color: #555; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Todos</h1>
+  <form id="todo-form">
+    <input data-testid="todo-input" type="text" placeholder="What needs doing?" aria-label="New todo" autocomplete="off">
+    <input data-testid="todo-due" type="date" aria-label="Due date (optional)">
+    <select data-testid="todo-priority" aria-label="Priority">
+      <option value="low">Low</option>
+      <option value="med" selected>Med</option>
+      <option value="high">High</option>
+    </select>
+    <button data-testid="todo-add" type="submit">Add</button>
+  </form>
+  <input class="search" data-testid="search-input" type="search" placeholder="Search todos" aria-label="Search todos" autocomplete="off">
+  <div class="filters" role="group" aria-label="Filter todos">
+    <button data-testid="filter-all" type="button" data-filter="all" aria-pressed="true">All</button>
+    <button data-testid="filter-active" type="button" data-filter="active" aria-pressed="false">Active</button>
+    <button data-testid="filter-completed" type="button" data-filter="completed" aria-pressed="false">Completed</button>
+  </div>
+  <ul data-testid="todo-list"></ul>
+  <div class="bulk" role="group" aria-label="Bulk actions">
+    <button data-testid="bulk-mark-all" type="button">Mark all complete</button>
+    <button data-testid="bulk-clear-completed" type="button">Clear completed</button>
+  </div>
+</main>
+<script>
+  var STORAGE_KEY = 'todos';
+  var form = document.getElementById('todo-form');
+  var input = document.querySelector('[data-testid="todo-input"]');
+  var dueInput = document.querySelector('[data-testid="todo-due"]');
+  var priorityInput = document.querySelector('[data-testid="todo-priority"]');
+  var list = document.querySelector('[data-testid="todo-list"]');
+  var filterButtons = document.querySelectorAll('[data-filter]');
+  var currentFilter = 'all';
+  var searchInput = document.querySelector('[data-testid="search-input"]');
+  var searchTerm = '';
+  var markAllButton = document.querySelector('[data-testid="bulk-mark-all"]');
+  var clearCompletedButton = document.querySelector('[data-testid="bulk-clear-completed"]');
+
+  // [REQ-001] Load todos from localStorage; ignore malformed data.
+  function loadTodos() {
+    try {
+      var parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      if (!Array.isArray(parsed)) return [];
+      // [REQ-002] Todos saved before completion existed default to active.
+      parsed.forEach(function (t) {
+        t.completed = t.completed === true;
+        // [REQ-010] Search lower-cases the text, so a missing text must not break render().
+        if (typeof t.text !== 'string') t.text = t.text == null ? '' : String(t.text);
+        // [REQ-003] Drop anything that is not a plain YYYY-MM-DD string.
+        t.due = normalizeDue(t.due);
+        // [REQ-004] Todos saved before priorities existed default to med.
+        t.priority = normalizePriority(t.priority);
+      });
+      return parsed;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // [REQ-001]
+  function saveTodos() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(todos)); } catch (e) {}
+  }
+
+  // [REQ-001] Stable unique id; crypto.randomUUID is not available in every file:// context.
+  function makeId() {
+    if (window.crypto && typeof crypto.randomUUID === 'function') {
+      try { return crypto.randomUUID(); } catch (e) {}
+    }
+    return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+  }
+
+  // [REQ-003] Due dates are plain YYYY-MM-DD strings, treated as local calendar dates. Never parsed through UTC.
+  function normalizeDue(value) {
+    return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
+  }
+
+  // [REQ-004] Priority is one of low, med, high; anything else becomes med.
+  function normalizePriority(value) {
+    return value === 'low' || value === 'high' ? value : 'med';
+  }
+
+  // [REQ-003] Today's local calendar date as YYYY-MM-DD.
+  function localToday(now) {
+    function pad(n) { return (n < 10 ? '0' : '') + n; }
+    return now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
+  }
+
+  // [REQ-003] Overdue means strictly before today's local date. Same-format strings compare correctly as text.
+  function isOverdue(due, today) {
+    return due !== null && due < today;
+  }
+
+  // [REQ-002] [REQ-005] Ordering: active todos first, completed below (DEC-003).
+  // Within each group: high, then med, then low; insertion order within the same priority.
+  // The todos array is kept in insertion order; bucketing by priority is stable, so it preserves that order.
+  function orderTodos(items) {
+    function byPriority(group) {
+      return ['high', 'med', 'low'].reduce(function (out, p) {
+        return out.concat(group.filter(function (t) { return t.priority === p; }));
+      }, []);
+    }
+    return byPriority(items.filter(function (t) { return !t.completed; }))
+      .concat(byPriority(items.filter(function (t) { return t.completed; })));
+  }
+
+  // [REQ-002]
+  function matchesFilter(todo, filter) {
+    if (filter === 'active') return !todo.completed;
+    if (filter === 'completed') return todo.completed;
+    return true;
+  }
+
+  // [REQ-007] Case-insensitive substring match on the todo text; an empty term matches everything.
+  function matchesSearch(todo, term) {
+    return todo.text.toLowerCase().indexOf(term.toLowerCase()) !== -1;
+  }
+
+  // [REQ-001] [REQ-002] [REQ-003] [REQ-004] [REQ-007]
+  function render() {
+    list.textContent = '';
+    var today = localToday(new Date());
+    filterButtons.forEach(function (btn) {
+      btn.setAttribute('aria-pressed', String(btn.dataset.filter === currentFilter));
+    });
+    // [REQ-007] Search narrows the filtered set; both must match.
+    orderTodos(todos).filter(function (t) { return matchesFilter(t, currentFilter) && matchesSearch(t, searchTerm); }).forEach(function (todo) {
+      var li = document.createElement('li');
+      li.setAttribute('data-testid', 'todo-item');
+      li.setAttribute('data-completed', String(todo.completed));
+      li.setAttribute('data-overdue', String(isOverdue(todo.due, today)));
+      li.setAttribute('data-priority', todo.priority);
+      li.dataset.id = todo.id;
+
+      var toggle = document.createElement('input');
+      toggle.type = 'checkbox';
+      toggle.setAttribute('data-testid', 'todo-toggle');
+      toggle.checked = todo.completed;
+      toggle.setAttribute('aria-label', 'Mark "' + todo.text + '" ' + (todo.completed ? 'incomplete' : 'complete'));
+      toggle.addEventListener('change', function () { toggleTodo(todo.id); });
+
+      var text = document.createElement('span');
+      text.setAttribute('data-testid', 'todo-text');
+      text.textContent = todo.text;
+      text.addEventListener('dblclick', function () { startEdit(text, todo); });
+
+      var del = document.createElement('button');
+      del.type = 'button';
+      del.setAttribute('data-testid', 'todo-delete');
+      del.textContent = 'Delete';
+      del.setAttribute('aria-label', 'Delete "' + todo.text + '"');
+      del.addEventListener('click', function () { deleteTodo(todo.id); });
+
+      li.appendChild(toggle);
+      li.appendChild(text);
+      var priority = document.createElement('span');
+      priority.className = 'priority';
+      priority.textContent = todo.priority;
+      li.appendChild(priority);
+      if (todo.due) {
+        var due = document.createElement('span');
+        due.className = 'due';
+        due.setAttribute('data-testid', 'todo-due-date');
+        due.textContent = 'Due ' + todo.due;
+        li.appendChild(due);
+      }
+      li.appendChild(del);
+      list.appendChild(li);
+    });
+  }
+
+  // [REQ-001] [REQ-003] [REQ-004]
+  function addTodo(rawText, rawDue, rawPriority) {
+    var text = rawText.trim();
+    if (!text) return;
+    todos.push({ id: makeId(), text: text, createdAt: Date.now(), completed: false, due: normalizeDue(rawDue), priority: normalizePriority(rawPriority) });
+    saveTodos();
+    render();
+  }
+
+  // [REQ-007] [REQ-010] Swap the text for an input. Enter or blur commits, Escape cancels.
+  // Blank text on commit is treated as a cancel, so editing never deletes a todo.
+  function startEdit(textEl, todo) {
+    var field = document.createElement('input');
+    field.type = 'text';
+    field.className = 'edit';
+    field.setAttribute('data-testid', 'todo-edit-input');
+    field.setAttribute('aria-label', 'Edit todo');
+    field.value = todo.text;
+    var finished = false;
+    function finish(commit) {
+      if (finished) return;
+      finished = true;
+      if (commit) editTodo(todo.id, field.value);
+      else render();
+    }
+    field.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+      else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+    });
+    field.addEventListener('blur', function () { finish(true); });
+    textEl.replaceWith(field);
+    field.focus();
+    field.select();
+  }
+
+  // [REQ-007]
+  function editTodo(id, rawText) {
+    var text = rawText.trim();
+    if (text) {
+      todos.forEach(function (t) { if (t.id === id) t.text = text; });
+      saveTodos();
+    }
+    render();
+  }
+
+  // [REQ-001]
+  function deleteTodo(id) {
+    todos = todos.filter(function (t) { return t.id !== id; });
+    saveTodos();
+    render();
+  }
+
+  // [REQ-002] Flip completion in place; the array keeps insertion order.
+  function toggleTodo(id) {
+    todos.forEach(function (t) { if (t.id === id) t.completed = !t.completed; });
+    saveTodos();
+    render();
+  }
+
+  // [REQ-009] Mark every todo complete, ignoring the current filter and search.
+  // Only the completed flag changes; the array keeps insertion order, so render() reorders per DEC-003/DEC-007/DEC-008.
+  function markAllComplete() {
+    todos.forEach(function (t) { t.completed = true; });
+    saveTodos();
+    render();
+  }
+
+  // [REQ-009] Remove every completed todo, ignoring the current filter and search. Filtering keeps the remaining insertion order.
+  function clearCompleted() {
+    todos = todos.filter(function (t) { return !t.completed; });
+    saveTodos();
+    render();
+  }
+
+  var todos = loadTodos();
+
+  // [REQ-009]
+  markAllButton.addEventListener('click', markAllComplete);
+  clearCompletedButton.addEventListener('click', clearCompleted);
+
+  filterButtons.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      currentFilter = btn.dataset.filter;
+      render();
+    });
+  });
+
+  // [REQ-007]
+  searchInput.addEventListener('input', function () {
+    searchTerm = searchInput.value;
+    render();
+  });
+
+  // [REQ-010] Enter in the todo input submits this form natively (it has a submit button), so no extra key handler; one would add twice.
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    addTodo(input.value, dueInput.value, priorityInput.value);
+    input.value = '';
+    dueInput.value = '';
+    priorityInput.value = 'med';
+    input.focus();
+  });
+
+  // [REQ-010] "/" focuses search unless the user is already typing in a field.
+  function isTypingTarget(el) {
+    if (!el) return false;
+    var tag = el.tagName;
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable;
+  }
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey || isTypingTarget(e.target)) return;
+    e.preventDefault();
+    searchInput.focus();
+    searchInput.select();
+  });
+
+  // [REQ-003] Recompute overdue state when the page regains focus, in case the local date has changed.
+  window.addEventListener('focus', render);
+
+  render();
+</script>
+</body>
+</html>

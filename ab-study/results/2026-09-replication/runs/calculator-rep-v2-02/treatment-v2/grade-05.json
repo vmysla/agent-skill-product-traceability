@@ -1,0 +1,151 @@
+{
+ "batch": 5,
+ "armDir": "/Users/vmysla/src/ab-study/arms/calculator-rep-v2-02/treatment-v2",
+ "total": 19,
+ "passed": 19,
+ "byTag": {
+  "core": {
+   "total": 16,
+   "passed": 16
+  },
+  "conflict": {
+   "total": 3,
+   "passed": 3
+  }
+ },
+ "results": [
+  {
+   "id": "b1-entry",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-one-decimal",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-add",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-four-ops",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-clear",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-single-file",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b2-running-result",
+   "batch": 2,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b2-chain-immediate",
+   "batch": 2,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b2-long-chain",
+   "batch": 2,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b3-round-display",
+   "batch": 3,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b3-trim-trailing",
+   "batch": 3,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b3-stored-exact",
+   "batch": 3,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b3-divzero",
+   "batch": 3,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b4-sign",
+   "batch": 4,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b4-percent",
+   "batch": 4,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b5-paren-basic",
+   "batch": 5,
+   "tag": "conflict",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b5-paren-nested",
+   "batch": 5,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b5-conflict-no-precedence",
+   "batch": 5,
+   "tag": "conflict",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b5-conflict-group-left-to-right",
+   "batch": 5,
+   "tag": "conflict",
+   "pass": true,
+   "error": null
+  }
+ ]
+}

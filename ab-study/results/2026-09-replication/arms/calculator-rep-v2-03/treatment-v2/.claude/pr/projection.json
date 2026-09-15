@@ -1,0 +1,130 @@
+{
+ "ts": "2026-09-13T03:43:58Z",
+ "source_map": [
+  {
+   "file": "index.html",
+   "lines": 445,
+   "functions": [
+    "memoryAdd@L135",
+    "memoryRecall@L142",
+    "memoryClear@L151",
+    "toggleSci@L157",
+    "applyUnary@L164",
+    "entryText@L178",
+    "addTapeRow@L183",
+    "clearAll@L203",
+    "compute@L211",
+    "formatNumber@L221",
+    "setError@L244",
+    "inputDigit@L252",
+    "inputDot@L265",
+    "inputSign@L279",
+    "inputOp@L298",
+    "openGroup@L322",
+    "closeGroup@L334",
+    "equals@L355",
+    "render@L385",
+    "press@L400"
+   ],
+   "testids": [
+    "mem-indicator",
+    "calc-display",
+    "key-mc",
+    "key-mr",
+    "key-mplus",
+    "key-sci",
+    "key-sqrt",
+    "key-square",
+    "key-recip",
+    "key-lparen",
+    "key-rparen",
+    "key-clear",
+    "key-sign",
+    "key-div",
+    "key-7",
+    "key-8",
+    "key-9",
+    "key-mul",
+    "key-4",
+    "key-5",
+    "key-6",
+    "key-sub",
+    "key-1",
+    "key-2",
+    "key-3",
+    "key-add",
+    "key-0",
+    "key-dot",
+    "key-equals",
+    "tape-clear",
+    "calc-tape"
+   ]
+  }
+ ],
+ "requirements": [
+  {
+   "id": "REQ-001",
+   "status": "partial",
+   "title": "Build a single-file calculator"
+  },
+  {
+   "id": "REQ-002",
+   "status": "done",
+   "title": "Chained calculations"
+  },
+  {
+   "id": "REQ-003",
+   "status": "done",
+   "title": "Number presentation and division by zero"
+  },
+  {
+   "id": "REQ-004",
+   "status": "done",
+   "title": "Add two single-key operations"
+  },
+  {
+   "id": "REQ-005",
+   "status": "done",
+   "title": "Add parentheses for grouping calculations"
+  },
+  {
+   "id": "REQ-006",
+   "status": "done",
+   "title": "Remove % key from keypad"
+  },
+  {
+   "id": "REQ-007",
+   "status": "done",
+   "title": "Running tape of past calculations"
+  },
+  {
+   "id": "REQ-008",
+   "status": "open",
+   "title": "Bug report from a user:"
+  },
+  {
+   "id": "REQ-009",
+   "status": "done",
+   "title": "Add memory keys"
+  },
+  {
+   "id": "REQ-010",
+   "status": "done",
+   "title": "Final pass: keyboard entry and compact scientific mode"
+  }
+ ],
+ "unverified": [
+  "REQ-001",
+  "REQ-002",
+  "REQ-003",
+  "REQ-004",
+  "REQ-005",
+  "REQ-006",
+  "REQ-007",
+  "REQ-009",
+  "REQ-010"
+ ],
+ "unsatisfied": [
+  "REQ-008"
+ ]
+}

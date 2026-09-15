@@ -1,0 +1,13 @@
+# Change log
+_Regenerated from the journal by product-record hooks. Newest first._
+
+2026-09-13T04:14:09Z  83788379  REQ-010  | I added R for a new game and a New game button (`data-testid="restart-btn"`), in `index.html`. The other keys already worked. The script parses, but I haven't r... | 1 file changed, 21 insertions(+), 10 deletions(-) [index.html]
+2026-09-13T04:13:02Z  afd7244b  REQ-009  | I added the ghost piece and pause. The script parses, but I haven't run the game in a browser. - **Locking rule:** pausing keeps the piece's lock ticks and rest... | 1 file changed, 82 insertions(+), 8 deletions(-) [index.html]
+2026-09-13T04:11:53Z  387ab0d7  REQ-008  | I couldn't reproduce this, so I didn't change any code. I ran the game logic at level 5 and dropped a vertical I piece into a well: - **Two-row clear:** 1,532 p... | no diff
+2026-09-13T04:10:54Z  5bee120b  REQ-007  | I added levels with faster gravity, and a hold slot. The script parses, but I haven't run the game in a browser. - **Levels:** the level goes up by one each tim... | 1 file changed, 63 insertions(+), 17 deletions(-) [index.html]
+2026-09-13T04:09:59Z  68f58759  REQ-006  | The preview panel now shows only the next piece, still in its board colour. I haven't run it in a browser. The change is one setting in `index.html`: the previe... | 1 file changed, 2 insertions(+), 3 deletions(-) [index.html]
+2026-09-13T04:09:29Z  971fc570  REQ-005  | I changed the down key so it no longer locks a piece that's already resting on the stack. It now restarts the lock delay, like a sideways move, and uses the sam... | 1 file changed, 24 insertions(+), 7 deletions(-) [index.html]
+2026-09-13T04:08:39Z  336a32e4  REQ-004  | I added the three-piece preview and the game-over state to `index.html`. I haven't run it in a browser; I only checked that the script parses. - **Preview:** it... | 1 file changed, 12 insertions(+), 10 deletions(-) [index.html]
+2026-09-13T04:07:48Z  85abae47  REQ-003  | Line clears and the row-clear points were already in `index.html`. I added soft-drop and hard-drop points, which were missing. I haven't run it. - **Line points... | 1 file changed, 16 insertions(+), 6 deletions(-) [index.html]
+2026-09-13T04:06:58Z  26bdfbd9  REQ-002  | I added clockwise rotation and the lock rule to `index.html`. I haven't run it. - **Rotation:** `rotateCW` tries the turn in place, then shifted 1 or 2 columns ... | 1 file changed, 38 insertions(+), 7 deletions(-) [index.html]
+2026-09-13T04:05:38Z  1116b62c  REQ-001  | I built the game as `index.html` in the repo root: one file, drawn with DOM elements only, and the display updates immediately after every change. I only checke... | no diff [index.html (new)]

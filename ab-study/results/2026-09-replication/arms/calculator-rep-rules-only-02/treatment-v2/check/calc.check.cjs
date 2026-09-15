@@ -1,0 +1,44 @@
+// Run: node check/calc.check.cjs
+const fs = require('fs');
+const assert = require('assert');
+const html = fs.readFileSync(__dirname + '/../index.html', 'utf8');
+const src = html.match(/<script>([\s\S]*?)<\/script>/)[1];
+const { press, initialState, displayText, formatNumber } = new Function(src + '; return { press, initialState, displayText, formatNumber };')();
+
+const run = (keys) => keys.split(' ').reduce(press, initialState());
+
+assert.strictEqual(displayText(initialState()), '0');
+assert.strictEqual(displayText(run('1 2 3')), '123');
+assert.strictEqual(String(run('1 2 3').value), '123');
+assert.strictEqual(displayText(run('1 dot 5 dot 2')), '1.52');
+assert.strictEqual(displayText(run('dot 5')), '0.5');
+assert.strictEqual(displayText(run('7 add 8 equals')), '15');
+assert.strictEqual(String(run('7 add 8 equals').value), '15');
+assert.strictEqual(displayText(run('2 add 3 mul 4 equals')), '20');
+assert.strictEqual(displayText(run('2 add 3 mul')), '5');
+assert.strictEqual(displayText(run('1 add 2 add 3 add 4 equals')), '10');
+assert.strictEqual(displayText(run('1 add 2 add 3 add')), '6');
+assert.strictEqual(displayText(run('9 sub 4 div 0 equals')), 'Error');
+assert.strictEqual(displayText(run('1 div 8 equals')), '0.125');
+assert.strictEqual(displayText(run('4 div 2 equals')), '2');
+assert.strictEqual(displayText(run('2 div 3 equals')), '0.6666666667');
+assert.strictEqual(run('2 div 3 mul 3 equals').value, 2);
+assert.strictEqual(run('2 div 3 equals').value, 2 / 3);
+assert.strictEqual(displayText(run('1 dot 5 0')), '1.50');
+assert.strictEqual(formatNumber(9999999999), '9999999999');
+assert.strictEqual(formatNumber(1e10), '1e+10');
+assert.strictEqual(formatNumber(12345678901), '1.23456789e+10');
+assert.strictEqual(formatNumber(1e-9), '0.000000001');
+assert.strictEqual(formatNumber(1.5e-10), '1.5e-10');
+assert.strictEqual(formatNumber(-0.5), '-0.5');
+assert.strictEqual(formatNumber(0.1 + 0.2), '0.3');
+assert.strictEqual(formatNumber(0), '0');
+assert.strictEqual(displayText(run('5 div 0 equals')), 'Error');
+assert.strictEqual(run('5 div 0 equals').error, true);
+assert.strictEqual(displayText(run('5 div 0 equals 7 add 1 dot equals')), 'Error');
+assert.strictEqual(displayText(run('5 div 0 add')), 'Error');
+assert.strictEqual(displayText(run('5 div 0 equals 7 clear')), '0');
+assert.strictEqual(run('5 div 0 equals clear').error, false);
+assert.strictEqual(displayText(run('7 add 8 equals clear')), '0');
+assert.strictEqual(String(run('7 add 8 equals clear').value), '0');
+console.log('ok');

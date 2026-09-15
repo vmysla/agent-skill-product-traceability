@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Todos</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 16px/1.4 system-ui, sans-serif; background: #f6f6f4; color: #222; }
+  main { max-width: 520px; margin: 40px auto; padding: 0 16px; }
+  h1 { font-size: 1.6rem; margin: 0 0 16px; }
+  form { display: flex; gap: 8px; margin-bottom: 16px; }
+  input { flex: 1; padding: 10px; font: inherit; border: 1px solid #ccc; border-radius: 6px; }
+  button { padding: 10px 14px; font: inherit; border: 0; border-radius: 6px; background: #2b6cb0; color: #fff; cursor: pointer; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #fff; border: 1px solid #e3e3e3; border-radius: 6px; margin-bottom: 8px; }
+  li span { flex: 1; word-break: break-word; }
+  li button { background: #c53030; padding: 6px 10px; font-size: 0.9rem; }
+  li input[type="checkbox"] { flex: none; width: 18px; height: 18px; margin: 0; }
+  li[data-completed="true"] span { text-decoration: line-through; color: #888; }
+  input[type="date"] { flex: none; }
+  li .due { flex: none; font-size: 0.85rem; color: #555; }
+  select { flex: none; padding: 10px; font: inherit; border: 1px solid #ccc; border-radius: 6px; background: #fff; }
+  li .priority { flex: none; font-size: 0.85rem; color: #555; }
+  li[data-overdue="true"] { border-color: #c53030; background: #fff5f5; }
+  li[data-overdue="true"] .due { color: #c53030; font-weight: 600; }
+  .search { display: block; width: 100%; margin-bottom: 16px; }
+  li .edit { padding: 4px 8px; }
+  .filters { display: flex; gap: 8px; margin-bottom: 16px; }
+  .filters button { background: #e2e8f0; color: #222; padding: 6px 12px; font-size: 0.9rem; }
+  .filters button[aria-pressed="true"] { background: #2b6cb0; color: #fff; }
+  .bulk { display: flex; gap: 8px; margin-top: 8px; }
+  .bulk button { background: #e2e8f0; color: #222; padding: 6px 12px; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Todos</h1>
+  <form id="todo-form">
+    <input data-testid="todo-input" type="text" placeholder="What needs doing?" autocomplete="off" aria-label="New todo">
+    <input data-testid="todo-due" type="date" aria-label="Due date">
+    <select data-testid="todo-priority" aria-label="Priority">
+      <option value="low">Low</option>
+      <option value="med" selected>Med</option>
+      <option value="high">High</option>
+    </select>
+    <button data-testid="todo-add" type="submit">Add</button>
+  </form>
+  <input class="search" data-testid="search-input" type="search" placeholder="Search todos" autocomplete="off" aria-label="Search todos">
+  <div class="filters">
+    <button data-testid="filter-all" data-filter="all" type="button" aria-pressed="true">All</button>
+    <button data-testid="filter-active" data-filter="active" type="button" aria-pressed="false">Active</button>
+    <button data-testid="filter-completed" data-filter="completed" type="button" aria-pressed="false">Completed</button>
+  </div>
+  <ul data-testid="todo-list"></ul>
+  <div class="bulk">
+    <button data-testid="bulk-mark-all" type="button">Mark all complete</button>
+    <button data-testid="bulk-clear-completed" type="button">Clear completed</button>
+  </div>
+</main>
+<script>
+  var STORAGE_KEY = 'todos';
+  var form = document.getElementById('todo-form');
+  var input = document.querySelector('[data-testid="todo-input"]');
+  var dueInput = document.querySelector('[data-testid="todo-due"]');
+  var priorityInput = document.querySelector('[data-testid="todo-priority"]');
+  var list = document.querySelector('[data-testid="todo-list"]');
+  var filterButtons = document.querySelectorAll('[data-filter]');
+  var searchInput = document.querySelector('[data-testid="search-input"]');
+  var todos = loadTodos();
+  var currentFilter = 'all';
+  var searchTerm = '';
+
+  // [REQ-001]
+  function loadTodos() {
+    try {
+      var data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      return Array.isArray(data) ? data : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // [REQ-001]
+  function saveTodos() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+    } catch (e) {}
+  }
+
+  // [REQ-001]
+  function makeId() {
+    if (window.crypto && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+    return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+  }
+
+  // [REQ-003] Due dates are plain local YYYY-MM-DD strings; never parsed through UTC.
+  function normalizeDue(value) {
+    return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
+  }
+
+  // [REQ-003] Today's LOCAL calendar date as YYYY-MM-DD.
+  function localToday(now) {
+    now = now || new Date();
+    var m = String(now.getMonth() + 1).padStart(2, '0');
+    var d = String(now.getDate()).padStart(2, '0');
+    return now.getFullYear() + '-' + m + '-' + d;
+  }
+
+  // [REQ-003] Overdue = due date strictly before today's local date (date-only string compare).
+  function isOverdue(due, today) {
+    return !!due && due < today;
+  }
+
+  // [REQ-004] Priority is low, med or high; anything else (including missing) is med.
+  function normalizePriority(value) {
+    return value === 'low' || value === 'high' ? value : 'med';
+  }
+
+  // [REQ-001] [REQ-003] [REQ-004]
+  function addTodo(text, due, priority) {
+    text = text.trim();
+    if (!text) return;
+    todos.push({ id: makeId(), text: text, createdAt: Date.now(), completed: false, due: normalizeDue(due), priority: normalizePriority(priority) });
+    saveTodos();
+    render();
+  }
+
+  // [REQ-001]
+  function deleteTodo(id) {
+    todos = todos.filter(function (t) { return t.id !== id; });
+    saveTodos();
+    render();
+  }
+
+  // [REQ-002]
+  function toggleTodo(id) {
+    todos.forEach(function (t) {
+      if (t.id === id) t.completed = !t.completed;
+    });
+    saveTodos();
+    render();
+  }
+
+  // [REQ-009] Complete every todo. The array is not reordered, so insertion order still breaks priority ties.
+  function markAllComplete() {
+    todos.forEach(function (t) { t.completed = true; });
+    saveTodos();
+    render();
+  }
+
+  // [REQ-009] Remove every completed todo; active todos keep their order.
+  function clearCompleted() {
+    todos = todos.filter(function (t) { return !t.completed; });
+    saveTodos();
+    render();
+  }
+
+  // [REQ-005] Highest priority first; insertion order within the same priority. Does not mutate items.
+  function byPriority(items) {
+    var rank = { high: 0, med: 1, low: 2 };
+    return items
+      .map(function (t, i) { return { t: t, i: i }; })
+      .sort(function (a, b) {
+        return (rank[normalizePriority(a.t.priority)] - rank[normalizePriority(b.t.priority)]) || (a.i - b.i);
+      })
+      .map(function (x) { return x.t; });
+  }
+
+  // [REQ-007] Case-insensitive substring match; an empty term matches everything.
+  function matchesSearch(text, term) {
+    return String(text).toLowerCase().indexOf(String(term || '').toLowerCase()) !== -1;
+  }
+
+  // [REQ-007] Replace a todo's text. Blank text keeps the old text.
+  function editTodo(id, text) {
+    text = String(text).trim();
+    if (!text) return render();
+    todos.forEach(function (t) {
+      if (t.id === id) t.text = text;
+    });
+    saveTodos();
+    render();
+  }
+
+  // [REQ-002] [REQ-005] [REQ-007] Search narrows the list; then active first, completed below, by priority and insertion order.
+  function visibleTodos(items, filter, term) {
+    items = items.filter(function (t) { return matchesSearch(t.text, term); });
+    var active = byPriority(items.filter(function (t) { return !t.completed; }));
+    var done = byPriority(items.filter(function (t) { return !!t.completed; }));
+    if (filter === 'active') return active;
+    if (filter === 'completed') return done;
+    return active.concat(done);
+  }
+
+  // [REQ-002]
+  function setFilter(filter) {
+    currentFilter = filter;
+    render();
+  }
+
+  // [REQ-001] [REQ-002] [REQ-003] [REQ-004] [REQ-006] Priority shown as plain text, no colour coding.
+  function render() {
+    var today = localToday();
+    list.textContent = '';
+    filterButtons.forEach(function (btn) {
+      btn.setAttribute('aria-pressed', String(btn.dataset.filter === currentFilter));
+    });
+    visibleTodos(todos, currentFilter, searchTerm).forEach(function (todo) {
+      var li = document.createElement('li');
+      li.setAttribute('data-testid', 'todo-item');
+      li.setAttribute('data-completed', String(!!todo.completed));
+      li.setAttribute('data-overdue', String(isOverdue(normalizeDue(todo.due), today)));
+      li.setAttribute('data-priority', normalizePriority(todo.priority));
+      li.dataset.id = todo.id;
+
+      var toggle = document.createElement('input');
+      toggle.type = 'checkbox';
+      toggle.setAttribute('data-testid', 'todo-toggle');
+      toggle.setAttribute('aria-label', 'Mark complete');
+      toggle.checked = !!todo.completed;
+      toggle.addEventListener('change', function () { toggleTodo(todo.id); });
+
+      var span = document.createElement('span');
+      span.setAttribute('data-testid', 'todo-text');
+      span.textContent = todo.text;
+      span.addEventListener('dblclick', function () { startEdit(span, todo); });
+
+      var del = document.createElement('button');
+      del.type = 'button';
+      del.setAttribute('data-testid', 'todo-delete');
+      del.textContent = 'Delete';
+      del.addEventListener('click', function () { deleteTodo(todo.id); });
+
+      li.appendChild(toggle);
+      li.appendChild(span);
+      var priority = document.createElement('span');
+      priority.className = 'priority';
+      priority.textContent = { high: 'High', med: 'Med', low: 'Low' }[normalizePriority(todo.priority)];
+      li.appendChild(priority);
+      if (normalizeDue(todo.due)) {
+        var due = document.createElement('span');
+        due.className = 'due';
+        due.setAttribute('data-testid', 'todo-due-label');
+        due.textContent = 'Due ' + todo.due;
+        li.appendChild(due);
+      }
+      li.appendChild(del);
+      list.appendChild(li);
+    });
+  }
+
+  // [REQ-007] [REQ-010] Double-click turns the text into a field. Enter or blur commits; Escape cancels.
+  function startEdit(span, todo) {
+    var field = document.createElement('input');
+    field.type = 'text';
+    field.className = 'edit';
+    field.setAttribute('data-testid', 'todo-edit');
+    field.setAttribute('aria-label', 'Edit todo');
+    field.value = todo.text;
+    var finished = false;
+    function finish(commit) {
+      if (finished) return;
+      finished = true;
+      if (commit) editTodo(todo.id, field.value);
+      else render();
+    }
+    field.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+      else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+    });
+    field.addEventListener('blur', function () { finish(true); });
+    span.replaceWith(field);
+    field.focus();
+    field.select();
+  }
+
+  // [REQ-007]
+  searchInput.addEventListener('input', function () {
+    searchTerm = searchInput.value;
+    render();
+  });
+
+  // [REQ-009]
+  document.querySelector('[data-testid="bulk-mark-all"]').addEventListener('click', markAllComplete);
+  document.querySelector('[data-testid="bulk-clear-completed"]').addEventListener('click', clearCompleted);
+
+  filterButtons.forEach(function (btn) {
+    btn.addEventListener('click', function () { setFilter(btn.dataset.filter); });
+  });
+
+  // [REQ-010] True when the key press comes from a field the user types into.
+  function isTypingTarget(el) {
+    if (!el) return false;
+    if (el.isContentEditable || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') return true;
+    return el.tagName === 'INPUT' && !/^(checkbox|radio|button|submit|reset)$/.test(el.type);
+  }
+
+  // [REQ-010] "/" focuses search unless the user is already typing in a field.
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey || isTypingTarget(e.target)) return;
+    e.preventDefault();
+    searchInput.focus();
+    searchInput.select();
+  });
+
+  // [REQ-001] [REQ-010] Enter in the todo input submits this form, which adds the todo.
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    addTodo(input.value, dueInput.value, priorityInput.value);
+    input.value = '';
+    dueInput.value = '';
+    priorityInput.value = 'med';
+    input.focus();
+  });
+
+  render();
+</script>
+</body>
+</html>

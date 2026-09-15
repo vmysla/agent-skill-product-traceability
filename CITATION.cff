@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use Product Traceability or its study, please cite it as below."
+title: "Product Traceability for Claude Code"
+abstract: >-
+  A Claude Code plugin that keeps a product record (requirements, decisions with rejected
+  alternatives, a requirement-to-code map and a change log) with lifecycle hooks, and gives
+  each new session a short summary of it. Includes a controlled A/B study on three web apps
+  with the raw sessions of all 27 runs.
+type: software
+authors:
+  - family-names: Mysla
+    given-names: Vlad
+version: 2.0.0
+license: MIT
+repository-code: "https://github.com/vmysla/agent-skill-product-traceability"
+keywords:
+  - claude-code
+  - coding-agents
+  - agentic-memory
+  - requirements-traceability
+  - developer-productivity

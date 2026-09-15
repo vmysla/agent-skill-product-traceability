@@ -1,0 +1,13 @@
+# Change log
+_Regenerated from the journal by product-record hooks. Newest first._
+
+2026-09-13T20:05:55Z  3290e211  REQ-010  | I added the `/` shortcut. Enter-to-add and Escape-to-cancel already worked, so I only tagged that code. I didn't run the app or any tests. I checked the earlier... | 1 file changed, 17 insertions(+), 1 deletion(-) [index.html]
+2026-09-13T20:04:56Z  e5b3fd42  REQ-009  | I added two buttons below the list. "Mark all complete" (`bulk-mark-all`) completes every todo, and "Clear completed" (`bulk-clear-completed`) deletes the compl... | 1 file changed, 24 insertions(+) [index.html]
+2026-09-13T20:04:18Z  4312a922  REQ-008  | I couldn't reproduce the bug, so I didn't change any code. - **Why:** The app follows DEC-005. It saves the due date as a plain `YYYY-MM-DD` string and compares... | no diff
+2026-09-13T20:03:27Z  ad2598f4  REQ-007  | I added inline editing: double-click the text to edit it, Enter or blur saves, Escape cancels. Clearing the text keeps the old text, and I didn't make it delete... | 1 file changed, 57 insertions(+), 3 deletions(-) [index.html]
+2026-09-13T20:02:31Z  ae65404a  REQ-006  | I removed the priority colours and stripes, so the red overdue highlight is now the only colour on a todo. Priority now shows as small grey text ("High", "Med" ... | 1 file changed, 6 insertions(+), 8 deletions(-) [index.html]
+2026-09-13T20:01:44Z  b602fb89  REQ-005  | I sorted todos high, then med, then low, keeping the order they were added within each priority. Completed todos still sit below all active ones (DEC-003), so t... | 1 file changed, 14 insertions(+), 3 deletions(-) [index.html]
+2026-09-13T20:01:06Z  0303f01d  REQ-004  | I added priorities: a `todo-priority` select that defaults to `med`, and a `data-priority` value on each item. Old todos that have no priority show as `med`. I ... | 1 file changed, 26 insertions(+), 5 deletions(-) [index.html]
+2026-09-13T20:00:19Z  28e1b60f  REQ-003  | I added an optional due date to each todo. It is saved as a plain local `YYYY-MM-DD` string. A todo is overdue only when that string sorts before today's local ... | 1 file changed, 39 insertions(+), 5 deletions(-) [index.html]
+2026-09-13T19:59:28Z  4931b329  REQ-002  | I added a checkbox on each todo, a `data-completed` value on each item, and the three filter buttons, with "All" selected at start. I haven't run or tested it. ... | 1 file changed, 55 insertions(+), 3 deletions(-) [index.html]
+2026-09-13T19:58:38Z  4e6ba29b  REQ-001  | I built the todo app as a single `index.html` in the repo root, using the test attributes exactly as given. I haven't run or tested it yet. The Add button sits ... | no diff [index.html (new)]

@@ -1,0 +1,49 @@
+{
+ "batch": 1,
+ "armDir": "/Users/vmysla/src/product-tracebility-ab-testing/ab-study/arms/todo-rep-v2-01/treatment-v2",
+ "total": 5,
+ "passed": 5,
+ "byTag": {
+  "core": {
+   "total": 5,
+   "passed": 5
+  }
+ },
+ "results": [
+  {
+   "id": "b1-add",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-multiple",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-delete",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-persist",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  },
+  {
+   "id": "b1-single-file",
+   "batch": 1,
+   "tag": "core",
+   "pass": true,
+   "error": null
+  }
+ ]
+}

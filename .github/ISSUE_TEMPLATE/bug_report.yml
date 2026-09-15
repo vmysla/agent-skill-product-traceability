@@ -1,0 +1,55 @@
+name: Bug report
+description: Something in Product Traceability or Light does not work as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. For security problems, please follow SECURITY.md instead of opening an issue.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ./install.sh
+        2. Open a git project in Claude Code and ask for ...
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: version
+    attributes:
+      label: Which version is installed?
+      options:
+        - Product Traceability (./install.sh)
+        - Product Traceability Light (./install.sh --light)
+        - Per-project install
+    validations:
+      required: true
+  - type: input
+    id: claude-code
+    attributes:
+      label: Claude Code version
+      description: Output of `claude --version`
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: OS and Python version
+      placeholder: macOS 15.4, Python 3.12
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output
+      description: Hook errors shown in the session, or the last lines of `.claude/pr/costs.jsonl` for extraction problems. Remove anything private.
+      render: text
