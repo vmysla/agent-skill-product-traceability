@@ -13,8 +13,8 @@ Subcommands (hook JSON on stdin):
                snapshot (git status + mtimes) against the last one; exit 0
                when something changed, 1 when nothing did
   turn_end     journal the end of a turn with the assistant's message and diffstat
-  has-edits    exit 0 if this session journaled an edit or bash_change, or the
-               working tree is dirty (an async hook may have been killed), else 1
+  has-edits    exit 0 if this session journaled an edit or bash_change since its
+               latest prompt (this turn), else 1
 """
 
 import json
@@ -130,11 +130,18 @@ def cmd_turn_end(project, data):
 
 
 def cmd_has_edits(project, data):
+    # This TURN only: rows after this session's latest prompt. A dirty tree is not evidence;
+    # the record's own files keep most repos dirty, which ran a model call after every reply.
     sid = data.get("session_id", "")
+    edited = False
     for row in prlib.read_jsonl(prlib.journal_path(project)):
-        if row.get("t") in ("edit", "bash_change") and row.get("session_id") == sid:
-            return 0
-    return 0 if prlib.git_status(project) else 1
+        if row.get("session_id") != sid:
+            continue
+        if row.get("t") == "prompt":
+            edited = False
+        elif row.get("t") in ("edit", "bash_change"):
+            edited = True
+    return 0 if edited else 1
 
 
 def main():

@@ -40,17 +40,29 @@ def today():
 
 def project_dir(hook_input=None):
     """The project root: the hook's cwd, else CLAUDE_PROJECT_DIR, else $PWD."""
-    cand = (hook_input or {}).get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
+    env_dir = os.environ.get("CLAUDE_PROJECT_DIR")
+    cand = (hook_input or {}).get("cwd") or env_dir or os.getcwd()
     # Claude Code's shell keeps its cwd across Bash calls, so after the model runs `cd check`
     # the hook's cwd is a subdirectory. Resolve to the git toplevel so the record never nests.
+    top = _git_toplevel(cand)
+    if top:
+        return Path(top).resolve()
+    # A cwd outside any repo (a scratchpad, /tmp) is not the project: use the session's
+    # project dir, else snapshots walk that whole folder (minutes on a 10k-file scratchpad).
+    if env_dir and os.path.isdir(env_dir) and env_dir != cand:
+        return Path(_git_toplevel(env_dir) or env_dir).resolve()
+    return Path(cand).resolve()
+
+
+def _git_toplevel(path):
     try:
-        top = subprocess.run(["git", "-C", cand, "rev-parse", "--show-toplevel"],
+        top = subprocess.run(["git", "-C", path, "rev-parse", "--show-toplevel"],
                              capture_output=True, text=True, timeout=5)
         if top.returncode == 0 and top.stdout.strip():
-            cand = top.stdout.strip()
+            return top.stdout.strip()
     except Exception:
         pass
-    return Path(cand).resolve()
+    return None
 
 
 def record_dir(project):

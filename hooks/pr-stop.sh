@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
-# Product Traceability - Stop hook (sync).
+# Product Traceability - Stop hook (sync part kept short).
 #
-# Order matters:
+# The session shows as busy until this hook returns, so only the fast steps run here:
 #   1. journal the turn end (message excerpt + diffstat)
 #   2. settle the standing checks: wait for an in-flight run, re-run if the
 #      last result predates this session's last edit
-#   3. extract requirement status and decisions with ONE Haiku call, only
-#      when this session edited something
-#   4. compile the record (zero tokens) and project it into native memory
 #   5. red-check gate: the only exit-2 path, at most once per session
+# Steps 3 and 4 run in a detached background job, one at a time (stop-bg.lock):
+#   3. extract requirement status and decisions with ONE Haiku call, only
+#      when this turn edited something
+#   4. compile the record (zero tokens) and project it into native memory
 #
 # stop_hook_active means we are already inside the one extra turn the gate
 # bought; never block again from there.
@@ -21,7 +22,8 @@ case "$(pr_field stop_hook_active)" in
 esac
 
 mkdir -p "${PR_DIR}" 2>/dev/null || true
-STOP_INPUT="${PR_DIR}/stop-input-${SESSION_ID}.json"
+# One file per turn, so a turn whose job could not start yet is resumed as a leftover.
+STOP_INPUT="${PR_DIR}/stop-input-${SESSION_ID}-$(date +%s).json"
 # The diff is captured now, inside the stop-input, so that if this hook is killed before
 # extraction finishes (a harness that does not wait for hooks, a hard session end), the next
 # Stop can resume it from the file even after the tree has moved on.
@@ -32,20 +34,28 @@ pr_py journal.py turn_end >/dev/null 2>&1 || true
 
 ( cd "${PROJECT_DIR}" && printf '%s' "${INPUT_JSON}" | python3 "${BIN_DIR}/check.py" --if-stale ) >/dev/null 2>&1 || true
 
-# Resume any extraction a previous session never finished (its stop-input is still here).
-for leftover in "${PR_DIR}"/stop-input-*.json; do
-  [[ -f "${leftover}" && "${leftover}" != "${STOP_INPUT}" ]] || continue
-  ( cd "${PROJECT_DIR}" && bash "${BIN_DIR}/extract.sh" "${leftover}" ) >/dev/null 2>&1 || true
-  rm -f "${leftover}" 2>/dev/null || true
-done
+# Decide now: "edited this turn" reads rows since the latest prompt, and the next prompt
+# may land before the background job gets here. No edits, nothing to extract.
+pr_py journal.py has-edits >/dev/null 2>&1 || rm -f "${STOP_INPUT}" 2>/dev/null || true
 
-if pr_py journal.py has-edits >/dev/null 2>&1; then
-  ( cd "${PROJECT_DIR}" && bash "${BIN_DIR}/extract.sh" "${STOP_INPUT}" ) >/dev/null 2>&1 || true
-fi
-
-pr_py compile.py >/dev/null 2>&1 || true
-pr_py memory.py write >/dev/null 2>&1 || true
-rm -f "${STOP_INPUT}" 2>/dev/null || true
+(
+  LOCK="${PR_DIR}/stop-bg.lock"
+  # A job killed mid-run leaves its lock; break it after 15 minutes.
+  [[ -n "$(find "${LOCK}" -maxdepth 0 -mmin +15 2>/dev/null)" ]] && rmdir "${LOCK}" 2>/dev/null
+  # Another turn's job is still running: leave this turn's stop-input for the next job.
+  mkdir "${LOCK}" 2>/dev/null || exit 0
+  trap 'rmdir "${LOCK}" 2>/dev/null' EXIT
+  # Every stop-input here is a turn not yet extracted (this one, or one a killed or
+  # skipped job left behind).
+  for pending in "${PR_DIR}"/stop-input-*.json; do
+    [[ -f "${pending}" ]] || continue
+    ( cd "${PROJECT_DIR}" && bash "${BIN_DIR}/extract.sh" "${pending}" ) || true
+    rm -f "${pending}" 2>/dev/null || true
+  done
+  pr_py compile.py || true
+  pr_py memory.py write || true
+) </dev/null >/dev/null 2>&1 &
+disown 2>/dev/null || true
 
 # Red gate. Prints the block decision on stdout (JSON protocol) and the
 # reason on stderr (exit-2 protocol) so either reading of the Stop contract

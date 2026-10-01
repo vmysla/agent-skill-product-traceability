@@ -32,7 +32,13 @@ PROJECT_DIR="$(pr_field cwd)"
 PROJECT_DIR="${PROJECT_DIR:-${CLAUDE_PROJECT_DIR:-$PWD}}"
 # The session shell keeps its cwd across Bash calls (`cd check` sticks), so anchor on the
 # git toplevel; otherwise .claude/pr/ gets created inside whatever directory the model is in.
-PROJECT_DIR="$(git -C "${PROJECT_DIR}" rev-parse --show-toplevel 2>/dev/null || echo "${PROJECT_DIR}")"
+# A cwd outside any repo (the model cd'd into a scratchpad or /tmp) is not the project:
+# fall back to the session's project dir, else every hook walks that folder file by file.
+if TOP="$(git -C "${PROJECT_DIR}" rev-parse --show-toplevel 2>/dev/null)" && [[ -n "${TOP}" ]]; then
+  PROJECT_DIR="${TOP}"
+elif [[ -n "${CLAUDE_PROJECT_DIR:-}" && -d "${CLAUDE_PROJECT_DIR}" ]]; then
+  PROJECT_DIR="$(git -C "${CLAUDE_PROJECT_DIR}" rev-parse --show-toplevel 2>/dev/null || echo "${CLAUDE_PROJECT_DIR}")"
+fi
 SESSION_ID="$(pr_field session_id)"
 SESSION_ID="${SESSION_ID:-unknown}"
 export CLAUDE_PROJECT_DIR="${PROJECT_DIR}"
